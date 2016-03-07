@@ -5,6 +5,7 @@ var teamSchema = new Schema({
   id:          { type: String, required: true, unique: true },
   name:        { type: String, required: true },
   number:      { type: Number, required: true },
+  currentRegional: { type: String, required: false },
   created_at:  Date,
   updated_at:  Date,
 });
