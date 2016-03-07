@@ -19,6 +19,6 @@ teamSchema.pre('save', function(next){
 });
 
 module.exports = function(db) {
-	var Team = mongoose.model('Team', teamSchema);
+	var Team = db.model('Team', teamSchema);
 	return Team;
 };
