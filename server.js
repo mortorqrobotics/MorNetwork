@@ -15,13 +15,13 @@ if(fs.existsSync("config.json")) {
 else {
 	config = {
 		"sessionSecret": "secret",
-		"dbName": "mornetwork"
+		"dbName": "MorNetwork"
 	};
 	fs.writeFileSync("config.json", JSON.stringify(config, null, "\t"));
 	console.log("Generated default config.json");
 }
 //create express application
-var app = express();;
+var app = express();
 
 String.prototype.contains = function(arg) {
   return this.indexOf(arg) > -1;
@@ -87,11 +87,12 @@ app.use(function(req, res, next) {
 function requireSubdomain(name) {
 	return function(req, res, next) {
 		var host = req.headers.host;
-		if(host.startsWith(name + ".")) {console.log("A")
+		if(host.startsWith(name + ".")) {
 			next();
 		}
 	};
 }
+// TODO: replace all of this junk with routers
 app.getSelf = function() { // yes, this has to exist
 	return this;
 };
@@ -122,8 +123,10 @@ var requireMorscout = requireSubdomain("scout");
 // var morscout = require("../morscout-server/server.js");
 var morscout = require("./testModule.js");
 morscout(getWrapper(requireMorscout), schemas);
-app.use(requireMorscout, function(req, res, next) {
-	// do not proceed if request sent to morscout
+app.use(function(req, res, next) { // only continue if request is for morteam
+	if(!req.headers.host.startsWith("scout.")) { // bad... but need to release
+		next();
+	}
 });
 var morteam = require("../morteam-server-website/server/server.js");
 morteam(app, schemas, io); // put morteam at the end to handle all requests that fall through

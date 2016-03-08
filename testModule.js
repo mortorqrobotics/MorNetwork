@@ -1,4 +1,5 @@
 module.exports = function(app, schemas) {
+
 	app.get("/", function(req, res) {
 		schemas.User.findOne({
 			firstname: "Bob"
@@ -12,4 +13,9 @@ module.exports = function(app, schemas) {
 			}
 		});
 	});
+
+	app.get("/test", function(req, res) {
+		res.end("test");
+	});
+	
 };
