@@ -20,28 +20,20 @@ else {
 	fs.writeFileSync("config.json", JSON.stringify(config, null, "\t"));
 	console.log("Generated default config.json");
 }
-
-var util = require("./util.js")(); //contains functions and objects that are used across all the modules
-
 //create express application
 var app = express();;
+
+String.prototype.contains = function(arg) {
+  return this.indexOf(arg) > -1;
+};
 
 //connect to mongodb server
 var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
 //import mongodb schemas
 var schemas = {
   User: require('./schemas/User.js')(db),
-  Team: require('./schemas/Team.js')(db),
-  Subdivision: require('./schemas/Subdivision.js')
+  Team: require('./schemas/Team.js')(db)
 };
-
-//assign variables to imported util functions(and objects) and database schemas (example: var myFunc = util.myFunc;)
-for(key in util){
-  eval("var " + key + " = util." + key + ";");
-}
-for(key in schemas){
-  eval("var " + key + " = schemas." + key + ";");
-}
 
 //start server
 var port = process.argv[2] || 8080;
@@ -92,83 +84,48 @@ app.use(function(req, res, next) {
   }
 });
 
-//check to see if user is logged in before continuing any further
-//allow browser to receive images, css, and js files without being logged in
-//allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
-app.use(function(req, res, next) {
-  var exceptions = ["/login.html", "/signup.html", "/fp.html", "/favicon.ico"];
-  if (req.method == "GET") {
-    if (req.path.contains("/css/") || req.path.contains("/js/") || req.path.contains("/img/")) {
-      next();
-    } else if ( exceptions.indexOf(req.url) > -1 ) {
-      next();
-    } else if (req.url == "/void.html") {
-      if (req.user) {
-        if (req.user.teams.length > 0) {
-          if(!req.user.current_team){
-            req.session.user.current_team.id = req.user.teams[0].id;
-            req.session.user.current_team.position = req.user.teams[0].position;
-            req.user.current_team.id = req.user.teams[0].id;
-            req.user.current_team.position = req.user.teams[0].position;
-          }
-          res.redirect("/");
-        } else {
-          next();
-        }
-      } else {
-        res.redirect("/");
-      }
-    } else {
-      if (req.user) {
-        if (req.user.teams.length > 0) {
-          next();
-        } else {
-          res.redirect("/void");
-        }
-      } else {
-        res.redirect("/login");
-      }
-    }
-  } else {
-    next();
-  }
-});
-
-//load any file in /website/public (aka publicDir)
-app.use(express.static(publicDir));
-
 function requireSubdomain(name) {
 	return function(req, res, next) {
 		var host = req.headers.host;
-		if(host.startsWith(name + ".")) {
+		if(host.startsWith(name + ".")) {console.log("A")
 			next();
 		}
 	};
 }
-function MorServerLoader(condition) { // wrap app to insert middleware
+app.getSelf = function() { // yes, this has to exist
+	return this;
+};
+var self = app.getSelf();
+function getWrapper(condition) { // wrap app to insert middleware
+	var wrapper = {};
+	for(var key in app) {
+		wrapper[key] = app[key];
+	}
 	var insertArg = function(list, index) {
-		var args = Array.prototype.slice(list, 0, index);
+		var args = Array.prototype.slice.call(list, 0, index);
 		args.push(condition);
-		args = args.concat(Array.prototype.slice(list, index));
+		args = args.concat(Array.prototype.slice.call(list, index));
 		return args;
 	};
-	this.post = function(path) {
-		app.post.apply(null, insertArg(arguments, 1));
+	wrapper.post = function(path) {
+		app.post.apply(self, insertArg(arguments, 1));
 	};
-	this.get = function(path) {
-		app.get.apply(null, insertArg(arguments, 1));
+	wrapper.get = function(path) {
+		app.get.apply(self, insertArg(arguments, 1));
 	};
-	this.use = function(path) {
-		app.use.apply(null, insertArg(arguments, 0));
+	wrapper.use = function(path) {
+		app.use.apply(self, insertArg(arguments, 0));
 	};
+	return wrapper;
 }
 var requireMorscout = requireSubdomain("scout");
-var morscout = require("../morscout-server/server.js");
-morscout(new MorServerLoader(requireMorscout), schemas);
+// var morscout = require("../morscout-server/server.js");
+var morscout = require("./testModule.js");
+morscout(getWrapper(requireMorscout), schemas);
 app.use(requireMorscout, function(req, res, next) {
 	// do not proceed if request sent to morscout
 });
 var morteam = require("../morteam-server-website/server/server.js");
-morteam(app, schemas); // put morteam at the end to handle all requests that fall through
+morteam(app, schemas, io); // put morteam at the end to handle all requests that fall through
 
 // 404 handled by each application

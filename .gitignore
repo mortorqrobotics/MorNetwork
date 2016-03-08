@@ -1,3 +1,4 @@
 config.json
 aws-config.json
 **/.DS_Store
+node_modules
