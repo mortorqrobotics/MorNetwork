@@ -32,7 +32,8 @@ var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName)
 //import mongodb schemas
 var schemas = {
   User: require('./schemas/User.js')(db),
-  Team: require('./schemas/Team.js')(db)
+  Team: require('./schemas/Team.js')(db),
+  Subdivision: require("./schemas/Subdivision.js")(db)
 };
 
 //start server
@@ -56,7 +57,7 @@ var sessionMiddleware = session({
   secret: config.sessionSecret,
   saveUninitialized: false,
   resave: false,
-  store: new MongoStore({ mongooseConnection: mongoose.connection })
+  store: new MongoStore({ mongooseConnection: db })
 });
 
 //can now use session info (cookies) with socket.io requests
@@ -69,7 +70,7 @@ app.use(sessionMiddleware);
 //load user info from session cookie into req.user object for each request
 app.use(function(req, res, next) {
   if (req.session && req.session.user) {
-    User.findOne({
+    schemas.User.findOne({
       username: req.session.user.username
     }, function(err, user) {
       if (user) {

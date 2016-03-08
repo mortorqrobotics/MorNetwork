@@ -14,8 +14,8 @@ module.exports = function(app, schemas) {
 		});
 	});
 
-	app.get("/test", function(req, res) {
+	app.post("/test", function(req, res) {
 		res.end("test");
 	});
-	
+
 };
