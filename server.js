@@ -28,7 +28,9 @@ String.prototype.contains = function(arg) {
 };
 
 //connect to mongodb server
-var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
+// var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
+mongoose.connect("mongodb://localhost:27017/" + config.dbName);
+var db = mongoose;
 //import mongodb schemas
 var schemas = {
   User: require('./schemas/User.js')(db),
@@ -57,7 +59,8 @@ var sessionMiddleware = session({
   secret: config.sessionSecret,
   saveUninitialized: false,
   resave: false,
-  store: new MongoStore({ mongooseConnection: db })
+  // store: new MongoStore({ mongooseConnection: db })
+  store: new MongoStore({ mongooseConnection: mongoose.connection })
 });
 
 //can now use session info (cookies) with socket.io requests
@@ -85,12 +88,10 @@ app.use(function(req, res, next) {
   }
 });
 
-function requireSubdomain(name) {
-	return function(req, res, next) {
+function requireSubdomain(name) { // TODO: rename this
+	return function(req) {
 		var host = req.headers.host;
-		if(host.startsWith(name + ".")) {
-			next();
-		}
+		return host.startsWith(name + ".");
 	};
 }
 // TODO: replace all of this junk with routers
@@ -103,33 +104,40 @@ function getWrapper(condition) { // wrap app to insert middleware
 	for(var key in app) {
 		wrapper[key] = app[key];
 	}
-	var insertArg = function(list, index) {
-		var args = Array.prototype.slice.call(list, 0, index);
-		args.push(condition);
-		args = args.concat(Array.prototype.slice.call(list, index));
+	var wrapFunction = function(args) { // ignore this for your own sanity
+		args = Array.prototype.slice.call(args);
+		var func = args[args.length - 1];
+		args[args.length - 1] = function(req, res, next) {
+			if(condition(req)) {
+				func(req, res, next);console.log(func.toString())
+			}
+			else {
+				next();
+			}
+		};
 		return args;
 	};
-	wrapper.post = function(path) {
-		app.post.apply(self, insertArg(arguments, 1));
+	wrapper.post = function() {
+		app.post.apply(self, wrapFunction(arguments));
 	};
-	wrapper.get = function(path) {
-		app.get.apply(self, insertArg(arguments, 1));
+	wrapper.get = function() {
+		app.get.apply(self, wrapFunction(arguments));
 	};
-	wrapper.use = function(path) {
-		app.use.apply(self, insertArg(arguments, 0));
+	wrapper.use = function() {
+		app.use.apply(self, wrapFunction(arguments));
 	};
 	return wrapper;
 }
-var requireMorscout = requireSubdomain("scout");
+var requireMorscout = requireSubdomain("scout"); // TODO: rename this
 // var morscout = require("../morscout-server/server.js");
 var morscout = require("./testModule.js");
 morscout(getWrapper(requireMorscout), schemas);
 app.use(function(req, res, next) { // only continue if request is for morteam
-	if(!req.headers.host.startsWith("scout.")) { // bad... but need to release
+	if(!requireMorscout(req)) { // bad... but need to release
 		next();
 	}
 });
 var morteam = require("../morteam-server-website/server/server.js");
-morteam(app, schemas, io); // put morteam at the end to handle all requests that fall through
+morteam(app, schemas, io, db); // put morteam at the end to handle all requests that fall through
 
 // 404 handled by each application
