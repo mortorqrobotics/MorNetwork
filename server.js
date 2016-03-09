@@ -98,7 +98,7 @@ app.use(function(req, res, next) {
 function requireSubdomain(name) { // TODO: rename this
 	return function(req) {
 		var host = req.headers.host;
-		return host.startsWith(name + ".");
+		return host.startsWith(name + ".") || host.startsWith("www." + name + ".");
 	};
 }
 // TODO: replace all of this junk with routers
