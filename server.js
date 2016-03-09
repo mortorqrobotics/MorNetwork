@@ -15,7 +15,11 @@ if(fs.existsSync("config.json")) {
 else {
 	config = {
 		"sessionSecret": "secret",
-		"dbName": "MorNetwork"
+		"dbName": "MorNetwork",
+		"host": "test.dev"
+		// add the following line to /etc/hosts to make cookies work with subdomains
+		// localhost test.dev
+		// then navigate to www.test.dev:8080 in browser for testing
 	};
 	fs.writeFileSync("config.json", JSON.stringify(config, null, "\t"));
 	console.log("Generated default config.json");
@@ -59,6 +63,9 @@ var sessionMiddleware = session({
   secret: config.sessionSecret,
   saveUninitialized: false,
   resave: false,
+  cookie: {
+	  domain: "." + config.host
+  },
   // store: new MongoStore({ mongooseConnection: db })
   store: new MongoStore({ mongooseConnection: mongoose.connection })
 });
@@ -109,7 +116,7 @@ function getWrapper(condition) { // wrap app to insert middleware
 		var func = args[args.length - 1];
 		args[args.length - 1] = function(req, res, next) {
 			if(condition(req)) {
-				func(req, res, next);console.log(func.toString())
+				func(req, res, next);
 			}
 			else {
 				next();
@@ -130,8 +137,8 @@ function getWrapper(condition) { // wrap app to insert middleware
 }
 var requireMorscout = requireSubdomain("scout"); // TODO: rename this
 // var morscout = require("../morscout-server/server.js");
-var morscout = require("./testModule.js");
-morscout(getWrapper(requireMorscout), schemas);
+var morscout = require("../morscout-server/server.js");
+morscout(getWrapper(requireMorscout), schemas, db);
 app.use(function(req, res, next) { // only continue if request is for morteam
 	if(!requireMorscout(req)) { // bad... but need to release
 		next();
