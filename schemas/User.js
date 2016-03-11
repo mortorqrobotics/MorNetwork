@@ -31,7 +31,8 @@ var userSchema = new Schema({
   }],
   current_team: {
     id: String,
-    position: String
+    position: String,
+	scoutCaptain: { type: Boolean, default: false }
   },
   bannedFromTeams: [String] //Array of ids of teams from which said user is banned
 });
