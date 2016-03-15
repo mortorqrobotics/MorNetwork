@@ -6,6 +6,7 @@ var teamSchema = new Schema({
   name:        { type: String, required: true },
   number:      { type: Number, required: true },
   currentRegional: { type: String, required: false },
+  isPrivate:   { type: Boolean, required: false, default: false},
   created_at:  Date,
   updated_at:  Date,
 });
