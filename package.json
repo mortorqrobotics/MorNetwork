@@ -4,13 +4,13 @@
   "description": "Main server for MorTorq web applications",
   "main": "server.js",
   "dependencies": {
-	"bcrypt": "^0.8.5",
+    "bcrypt": "^0.8.5",
     "body-parser": "^1.14.0",
     "connect-mongo": "^0.8.2",
     "ejs": "^2.3.4",
     "express": "^4.13.3",
     "express-session": "^1.11.3",
-    "mongoose": "^4.1.7",
+    "mongoose": "^4.4.6",
     "multer": "^1.0.6",
     "socket.io": "^1.3.5"
   },

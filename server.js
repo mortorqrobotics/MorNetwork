@@ -53,6 +53,14 @@ app.use(function(err, req, res, next) {
   res.status(500).send('Oops, something went wrong!');
 });
 
+// allow CORS for offline webapp
+app.use(function(req, res, next) {
+	res.setHeader("Access-Control-Allow-Origin", "null");
+	res.setHeader("Access-Control-Allow-Credentials", "true");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Origin, Allow");
+	next();
+});
+
 //middleware to get request body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
