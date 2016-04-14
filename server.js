@@ -2,22 +2,22 @@
 
 // This is the glue.
 
-let express = require('express');
-let http = require('http');
-let fs = require('fs');
-let bodyParser = require('body-parser');
-let mongoose = require('mongoose'); //MongoDB ODM
-let session = require('express-session');
-let MongoStore = require('connect-mongo')(session);
+let express = require("express");
+let http = require("http");
+let fs = require("fs");
+let bodyParser = require("body-parser");
+let mongoose = require("mongoose"); //MongoDB ODM
+let session = require("express-session");
+let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; //this is used to cast strings to MongoDB ObjectIds
-let multer = require('multer'); //for file uploads
+let multer = require("multer"); //for file uploads
 
 let Promise = require("bluebird");
 
 console.log = console.log.bind(console);
 
 let config; // contains passwords and other sensitive info
-if(fs.existsSync("config.json")) {
+if (fs.existsSync("config.json")) {
 	config = require("./config.json");
 }
 else {
@@ -40,13 +40,13 @@ String.prototype.contains = function(arg) {
 };
 
 // connect to mongodb server
-// let db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
+// let db = mongoose.createConnection("mongodb://localhost:27017/" + config.dbName);
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
 let db = mongoose;
 // import mongodb schemas
 let schemas = {
-	User: require('./schemas/User.js')(db),
-	Team: require('./schemas/Team.js')(db),
+	User: require("./schemas/User.js")(db),
+	Team: require("./schemas/Team.js")(db),
 	Subdivision: require("./schemas/Subdivision.js")(db)
 };
 
@@ -57,12 +57,12 @@ for (let name in schemas) {
 // start server
 let port = process.argv[2] || 8080;
 let io = require("socket.io").listen(app.listen(port));
-console.log('server started on port %s', port);
+console.log("server started on port %s", port);
 
 // check for any errors in all requests
 app.use(function(err, req, res, next) {
 	console.error(err.stack);
-	res.status(500).send('Oops, something went wrong!');
+	res.status(500).send("Oops, something went wrong!");
 });
 
 // middleware to get request body
@@ -83,7 +83,7 @@ let sessionMiddleware = session({
 });
 
 // can now use session info (cookies) with socket.io requests
-io.use(function(socket, next){
+io.use(function(socket, next) {
 	sessionMiddleware(socket.request, socket.request.res, next);
 });
 // can now use session info (cookies) with regular requests
@@ -92,16 +92,13 @@ app.use(sessionMiddleware);
 // load user info from session cookie into req.user object for each request
 app.use(function(req, res, next) {
 	if (req.session && req.session.user) {
-		schemas.User.findOne({
+		schemas.User.findOneAsync({
 			username: req.session.user.username
-		}, function(err, user) {
-			if (user) {
-				req.user = user;
-				delete req.user.password;
-				req.session.user = user;
-			}
-			next();
-		});
+		}).then(function(user) {
+			delete user.password;
+			req.user = user;
+			req.session.user = user;
+		}).then(next);
 	} else {
 		next();
 	}
@@ -147,7 +144,7 @@ let requireMorscout = requireSubdomain("scout"); // TODO: rename this
 let morscout = require("../morscout-server/server.js");
 morscout(getWrapper(requireMorscout), schemas, db);
 app.use(function(req, res, next) { // only continue if request is for morteam
-	if(!requireMorscout(req)) {
+	if (!requireMorscout(req)) {
 		next();
 	}
 });
