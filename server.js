@@ -6,13 +6,14 @@ let express = require("express");
 let http = require("http");
 let fs = require("fs");
 let bodyParser = require("body-parser");
-let mongoose = require("mongoose"); //MongoDB ODM
+let mongoose = require("mongoose"); // MongoDB ODM
 let session = require("express-session");
 let MongoStore = require("connect-mongo")(session);
-let ObjectId = mongoose.Types.ObjectId; //this is used to cast strings to MongoDB ObjectIds
-let multer = require("multer"); //for file uploads
+let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
+let multer = require("multer"); // for file uploads
 
 let Promise = require("bluebird");
+mongoose.Promise = Promise;
 
 console.log = console.log.bind(console);
 
@@ -49,10 +50,6 @@ let schemas = {
 	Team: require("./schemas/Team.js")(db),
 	Subdivision: require("./schemas/Subdivision.js")(db)
 };
-
-for (let name in schemas) {
-	Promise.promisifyAll(schemas[name]);
-}
 
 // start server
 let port = process.argv[2] || 8080;
@@ -92,9 +89,9 @@ app.use(sessionMiddleware);
 // load user info from session cookie into req.user object for each request
 app.use(function(req, res, next) {
 	if (req.session && req.session.user) {
-		schemas.User.findOneAsync({
+		schemas.User.findOne({
 			username: req.session.user.username
-		}).then(function(user) {
+		}).exec().then(function(user) {
 			delete user.password;
 			req.user = user;
 			req.session.user = user;
