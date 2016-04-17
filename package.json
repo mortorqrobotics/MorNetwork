@@ -4,7 +4,8 @@
   "description": "Main server for MorTorq web applications",
   "main": "server.js",
   "dependencies": {
-    "bcrypt": "^0.8.5",
+	"bcrypt": "^0.8.5",
+	"bluebird": "^3.3.5",
     "body-parser": "^1.14.0",
     "connect-mongo": "^0.8.2",
     "ejs": "^2.3.4",
