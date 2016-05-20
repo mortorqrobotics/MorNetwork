@@ -44,16 +44,19 @@ let io = require("socket.io").listen(app.listen(port));
 console.log("server started on port %s", port);
 
 // define imports for modules
-let imports = {
-	modules: {
-		mongoose: mongoose
-	},
-	models: {
-		User: require("./models/User.js"),
-		Team: require("./models/Team.js"),
-		Subdivision: require("./models/Subdivision.js")
-	},
-	socketio: io
+// this has to be a function so that each module has a different imports object
+function getImports() {
+	return {
+		modules: {
+			mongoose: mongoose
+		},
+		models: {
+			User: require("./models/User.js"),
+			Team: require("./models/Team.js"),
+			Subdivision: require("./models/Subdivision.js")
+		},
+		socketio: io
+	};
 };
 
 // check for any errors in all requests
@@ -116,10 +119,10 @@ function requireMorteam(req) {
 }
 
 let requireMorscout = requireSubdomain("scout"); // TODO: rename this
-let morscoutRouter = require("../morscout-server/server.js")(imports);
+let morscoutRouter = require("../morscout-server/server.js")(getImports());
 app.use("/", requireMorscout, morscoutRouter);
 
-let morteamRouter = require("../morteam-server-website/server/server.js")(imports);
+let morteamRouter = require("../morteam-server-website/server/server.js")(getImports());
 app.use("/", requireMorteam, morteamRouter);
 
 // 404 handled by each application
