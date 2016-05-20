@@ -1,23 +1,26 @@
-module.exports = function(app, schemas) {
+module.exports = function(imports) {
 
-	app.get("/", function(req, res) {
-		schemas.User.findOne({
+	let express = imports.modules.express;
+	let User = imports.models.User;
+
+	let router = express.Router();
+
+	router.get("/", function(req, res) {
+		User.findOne({
 			firstname: "Bob"
 		}, function(err, user) {
-			if(err) {
+			if (err || !user) {
 				res.end("none");
-			}
-			else {
-				delete user.password;
-				res.end(JSON.stringify(user));
+			} else {
+				res.json(user);
 			}
 		});
 	});
 
-	app.use(function(a,b,c){c()})
-
-	app.post("/test", function(req, res) {
+	router.post("/test", function(req, res) {
 		res.end("test");
 	});
+
+	return router;
 
 };

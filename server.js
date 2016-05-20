@@ -112,7 +112,7 @@ function requireMorteam(req) {
 }
 
 let requireMorscout = requireSubdomain("scout"); // TODO: rename this
-let morscoutRouter = require("../morscout-server/server.js")(schemas, db);
+let morscoutRouter = require("../morscout-server/server.js")(schemas, mongoose);
 app.use("/", requireMorscout, morscoutRouter);
 
 let morteamRouter = require("../morteam-server-website/server/server.js")(schemas, db, io);
