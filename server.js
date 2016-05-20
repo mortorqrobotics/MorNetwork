@@ -37,22 +37,24 @@ let app = express();
 // connect to mongodb server
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
 
+
+// start server
+let port = process.argv[2] || 8080;
+let io = require("socket.io").listen(app.listen(port));
+console.log("server started on port %s", port);
+
 // define imports for modules
 let imports = {
 	modules: {
 		mongoose: mongoose
 	},
 	models: {
-		User: require("./schemas/User.js"),
-		Team: require("./schemas/Team.js"),
-		Subdivision: require("./schemas/Subdivision.js")
-	}
+		User: require("./models/User.js"),
+		Team: require("./models/Team.js"),
+		Subdivision: require("./models/Subdivision.js")
+	},
+	socketio: io
 };
-
-// start server
-let port = process.argv[2] || 8080;
-let io = require("socket.io").listen(app.listen(port));
-console.log("server started on port %s", port);
 
 // check for any errors in all requests
 app.use(function(err, req, res, next) {
@@ -114,10 +116,10 @@ function requireMorteam(req) {
 }
 
 let requireMorscout = requireSubdomain("scout"); // TODO: rename this
-let morscoutRouter = require("../morscout-server/server.js")(schemas, mongoose);
+let morscoutRouter = require("../morscout-server/server.js")(imports);
 app.use("/", requireMorscout, morscoutRouter);
 
-let morteamRouter = require("../morteam-server-website/server/server.js")(schemas, db, io);
+let morteamRouter = require("../morteam-server-website/server/server.js")(imports);
 app.use("/", requireMorteam, morteamRouter);
 
 // 404 handled by each application
