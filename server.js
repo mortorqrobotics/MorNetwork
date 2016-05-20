@@ -34,17 +34,19 @@ else {
 // create express application
 let app = express();
 
-String.prototype.contains = function(arg) {
-	return this.indexOf(arg) > -1;
-};
-
 // connect to mongodb server
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
-// import mongodb schemas
-let schemas = {
-	User: require("./schemas/User.js"),
-	Team: require("./schemas/Team.js"),
-	Subdivision: require("./schemas/Subdivision.js"),
+
+// define imports for modules
+let imports = {
+	modules: {
+		mongoose: mongoose
+	},
+	models: {
+		User: require("./schemas/User.js"),
+		Team: require("./schemas/Team.js"),
+		Subdivision: require("./schemas/Subdivision.js")
+	}
 };
 
 // start server
