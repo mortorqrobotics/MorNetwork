@@ -37,6 +37,9 @@ let app = express();
 // connect to mongodb server
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
 
+let User = require("./models/User.js")(mongoose); // TODO: change this dependency injection
+let Team = require("./models/Team.js")(mongoose);
+let Subdivision = require("./models/Subdivision.js")(mongoose);
 
 // start server
 let port = process.argv[2] || 8080;
@@ -51,9 +54,9 @@ function getImports() {
 			mongoose: mongoose
 		},
 		models: {
-			User: require("./models/User.js"),
-			Team: require("./models/Team.js"),
-			Subdivision: require("./models/Subdivision.js")
+			User: User,
+			Team: Team,
+			Subdivision: Subdivision
 		},
 		socketio: io
 	};
@@ -90,21 +93,25 @@ app.use(sessionMiddleware);
 
 // load user info from session cookie into req.user object for each request
 app.use(Promise.coroutine(function*(req, res, next) {
-	if (req.session && req.session.user) {
+	if (req.session && req.session.userId) {
 		try {
 
-			let user = schemas.User.findOne({
-				_id: req.session.user._id
+			let user = yield User.findOne({
+				_id: req.session.userId
 			});
 
 			req.user = user;
 
+			next();
+
 		} catch (err) {
+			// TODO: handle more cleanly the case where userId is not found for if the user is deleted or something
 			console.error(err);
 			res.end("fail");
 		}
+	} else {
+		next();
 	}
-	next();
 }));
 
 function requireSubdomain(name) { // TODO: rename this
@@ -113,17 +120,22 @@ function requireSubdomain(name) { // TODO: rename this
 		return host.startsWith(name + ".") || host.startsWith("www." + name + ".");
 	};
 }
-function requireMorteam(req) {
+function requireMorteam(req,res,next) {
 	let host = req.headers.host;
-	return /^(www\.)?[^\.]+\.[^\.]+$/.test(host);
+//	console.log(/^(www\.)?[^\.]+\.[^\.]+$/.test(host));
+	if(
+	 /^(www\.)?[^\.]+\.[^\.]+$/.test(host)
+	 )next();
 }
 
-let requireMorscout = requireSubdomain("scout"); // TODO: rename this
-let morscoutRouter = require("../morscout-server/server.js")(getImports());
-app.use("/", requireMorscout, morscoutRouter);
+//let requireMorscout = requireSubdomain("scout"); // TODO: rename this
+//let morscoutRouter = require("../morscout-server/server.js")(getImports());
+//app.use(requireMorscout, morscoutRouter);
+
+app.set("view engine", "ejs");
 
 let morteamRouter = require("../morteam-server-website/server/server.js")(getImports());
-app.use("/", requireMorteam, morteamRouter);
+app.use(requireMorteam, morteamRouter);
 
 // 404 handled by each application
-// still put a 404 handler here though?
+// TODO: still put a 404 handler here though?
