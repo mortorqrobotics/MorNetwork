@@ -6,10 +6,10 @@ module.exports = function(imports) {
 
 	let express = imports.modules.express;
 
-	let router = express.Router();
+	let app = express();
 
-	router.use("/test", require("./routes.js")(imports));
+	app.use("/test", require("./routes.js")(imports));
 
-	return router;
+	return app;
 
 };

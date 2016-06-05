@@ -11,6 +11,7 @@ let session = require("express-session");
 let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let multer = require("multer"); // for file uploads
+let vh = require("express-vhost");
 
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
@@ -63,6 +64,7 @@ function getImports() {
 };
 
 // check for any errors in all requests
+// TODO: does this actually do anything?
 app.use(function(err, req, res, next) {
 	console.error(err.stack);
 	res.status(500).send("Oops, something went wrong!");
@@ -114,28 +116,20 @@ app.use(Promise.coroutine(function*(req, res, next) {
 	}
 }));
 
-function requireSubdomain(name) { // TODO: rename this
-	return function(req) {
-		let host = req.headers.host;
-		return host.startsWith(name + ".") || host.startsWith("www." + name + ".");
-	};
-}
-function requireMorteam(req,res,next) {
-	let host = req.headers.host;
-//	console.log(/^(www\.)?[^\.]+\.[^\.]+$/.test(host));
-	if(
-	 /^(www\.)?[^\.]+\.[^\.]+$/.test(host)
-	 )next();
-}
 
-//let requireMorscout = requireSubdomain("scout"); // TODO: rename this
-//let morscoutRouter = require("../morscout-server/server.js")(getImports());
-//app.use(requireMorscout, morscoutRouter);
+let morteam = require("../morteam-server-website/server/server.js")(getImports());
+vh.register(config.host, morteam);
+vh.register("www." + config.host, morteam);
 
-app.set("view engine", "ejs");
+//let morscout = require("../morscout-server/server.js")(getImports());
+//vh.register("scout." + config.host, morscout);
+//vh.register("www.scout." + config.host, morscout);
 
-let morteamRouter = require("../morteam-server-website/server/server.js")(getImports());
-app.use(requireMorteam, morteamRouter);
+//let testModule = require("./testModule/server.js")(getImports());
+//vh.register("test." + config.host, testModule);
+//vh.register("www.test." + config.host, testModule);
+
+app.use(vh.vhost(app.enabled("trust proxy")));
 
 // 404 handled by each application
 // TODO: still put a 404 handler here though?
