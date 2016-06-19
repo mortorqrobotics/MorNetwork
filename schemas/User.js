@@ -68,7 +68,16 @@ userSchema.pre('save', function(next) {
 });
 
 userSchema.methods.comparePassword = function(candidatePassword) {
-	return Promise.promisify(bcrypt.compare.bind(bcrypt))(candidatePassword, this.password);
+	let password = this.password;
+	return new Promise(function(resolve, reject) {
+		bcrypt.compare(candidatePassword, password, function(err, isMatch) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(isMatch);
+			}
+		});
+	});
 };
 
 // userSchema.methods.assignNewPassword = function(cb) {
