@@ -26,7 +26,7 @@ var userSchema = new Schema({
 	created_at:   Date,
 	updated_at:   Date,
 	profpicpath:  String,
-	teams:        Array, //Array of ids of teams of which said user is a member. IMPORTANT: id != _id (for "teams" a non-random id is used as opposed to an _id)
+	teams:        Array, // Array of ids of teams of which said user is a member. IMPORTANT: id != _id (for "teams" a non-random id is used as opposed to an _id)
 	subdivisions: [{
 		_id: { type: Schema.Types.ObjectId, ref: 'Subdivision' },
 		team: String,

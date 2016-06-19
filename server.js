@@ -11,11 +11,10 @@ let session = require("express-session");
 let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let multer = require("multer"); // for file uploads
+let vh = require("express-vhost");
 
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
-
-console.log = console.log.bind(console);
 
 let config; // contains passwords and other sensitive info
 if (fs.existsSync("config.json")) {
@@ -36,27 +35,36 @@ else {
 // create express application
 let app = express();
 
-String.prototype.contains = function(arg) {
-	return this.indexOf(arg) > -1;
-};
-
 // connect to mongodb server
-// let db = mongoose.createConnection("mongodb://localhost:27017/" + config.dbName);
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
-let db = mongoose;
-// import mongodb schemas
-let schemas = {
-	User: require("./schemas/User.js")(db),
-	Team: require("./schemas/Team.js")(db),
-	Subdivision: require("./schemas/Subdivision.js")(db)
-};
+
+let User = require("./models/User.js")(mongoose); // TODO: change this dependency injection
+let Team = require("./models/Team.js")(mongoose);
+let Subdivision = require("./models/Subdivision.js")(mongoose);
 
 // start server
 let port = process.argv[2] || 8080;
 let io = require("socket.io").listen(app.listen(port));
 console.log("server started on port %s", port);
 
+// define imports for modules
+// this has to be a function so that each module has a different imports object
+function getImports() {
+	return {
+		modules: {
+			mongoose: mongoose
+		},
+		models: {
+			User: User,
+			Team: Team,
+			Subdivision: Subdivision
+		},
+		socketio: io
+	};
+};
+
 // check for any errors in all requests
+// TODO: does this actually do anything?
 app.use(function(err, req, res, next) {
 	console.error(err.stack);
 	res.status(500).send("Oops, something went wrong!");
@@ -75,7 +83,6 @@ let sessionMiddleware = session({
  	cookie: {
 		domain: "." + config.host
 	},
-	// store: new MongoStore({ mongooseConnection: db })
 	store: new MongoStore({ mongooseConnection: mongoose.connection })
 });
 
@@ -87,65 +94,42 @@ io.use(function(socket, next) {
 app.use(sessionMiddleware);
 
 // load user info from session cookie into req.user object for each request
-app.use(function(req, res, next) {
-	if (req.session && req.session.user) {
-		schemas.User.findOne({
-			username: req.session.user.username
-		}).exec().then(function(user) {
-			delete user.password;
+app.use(Promise.coroutine(function*(req, res, next) {
+	if (req.session && req.session.userId) {
+		try {
+
+			let user = yield User.findOne({
+				_id: req.session.userId
+			});
+
 			req.user = user;
-			req.session.user = user;
-		}).then(next);
+
+			next();
+
+		} catch (err) {
+			// TODO: handle more cleanly the case where userId is not found for if the user is deleted or something
+			console.error(err);
+			res.end("fail");
+		}
 	} else {
 		next();
 	}
-});
+}));
 
-function requireSubdomain(name) { // TODO: rename this
-	return function(req) {
-		let host = req.headers.host;
-		return host.startsWith(name + ".") || host.startsWith("www." + name + ".");
-	};
-}
-// TODO: replace all of this junk with routers
-function getWrapper(condition) { // wrap app to insert middleware
-	let wrapper = {};
-	for(let key in app) {
-		wrapper[key] = app[key];
-	}
-	let wrapFunction = function(args) { // ignore this for your own sanity
-		args = Array.prototype.slice.call(args);
-		let func = args[args.length - 1];
-		args[args.length - 1] = function(req, res, next) {
-			if(condition(req)) {
-				func(req, res, next);
-			} else {
-				next();
-			}
-		};
-		return args;
-	};
-	wrapper.post = function() {
-		app.post.apply(app, wrapFunction(arguments));
-	};
-	wrapper.get = function() {
-		app.get.apply(app, wrapFunction(arguments));
-	};
-	wrapper.use = function() {
-		app.use.apply(app, wrapFunction(arguments));
-	};
-	return wrapper;
-}
-let requireMorscout = requireSubdomain("scout"); // TODO: rename this
-// let morscout = require("../morscout-server/server.js");
-let morscout = require("../morscout-server/server.js");
-morscout(getWrapper(requireMorscout), schemas, db);
-app.use(function(req, res, next) { // only continue if request is for morteam
-	if (!requireMorscout(req)) {
-		next();
-	}
-});
-let morteam = require("../morteam-server-website/server/server.js");
-morteam(app, schemas, io, db); // put morteam at the end to handle all requests that fall through
+
+let morteam = require("../morteam-server-website/server/server.js")(getImports());
+vh.register(config.host, morteam);
+vh.register("www." + config.host, morteam);
+
+//let morscout = require("../morscout-server/server.js")(getImports());
+//vh.register("scout." + config.host, morscout);
+//vh.register("www.scout." + config.host, morscout);
+
+//let testModule = require("./testModule/server.js")(getImports());
+//vh.register("test." + config.host, testModule);
+//vh.register("www.test." + config.host, testModule);
+
+app.use(vh.vhost(app.enabled("trust proxy")));
 
 // 404 handled by each application
+// TODO: still put a 404 handler here though?
