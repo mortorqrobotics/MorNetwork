@@ -38,7 +38,7 @@ let app = express();
 // connect to mongodb server
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
 
-let User = require("./models/User.js")(mongoose); // TODO: change this dependency injection
+let User = require("./models/User.js")(mongoose);
 let Team = require("./models/Team.js")(mongoose);
 let Subdivision = require("./models/Subdivision.js")(mongoose);
 
