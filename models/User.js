@@ -28,7 +28,10 @@ module.exports = function(mongoose) {
 		created_at:   Date,
 		updated_at:   Date,
 		profpicpath:  String,
-		teams:        [{ type: ObjectId, ref: "Team" }], // Array of ids of teams of which said user is a member. IMPORTANT: id != _id (for "teams" a non-random id is used as opposed to an _id)
+		teams:        [{
+			_id: { type: ObjectId, ref: "Team" },
+			position: String
+		}], // Array of ids of teams of which said user is a member. IMPORTANT: id != _id (for "teams" a non-random id is used as opposed to an _id)
 		subdivisions: [{
 			_id: { type: ObjectId, ref: "Subdivision" },
 			team: String, // TODO: get rid of this; it is unnecessary
