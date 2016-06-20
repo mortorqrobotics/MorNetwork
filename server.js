@@ -38,7 +38,7 @@ let app = express();
 // connect to mongodb server
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
 
-let User = require("./models/User.js")(mongoose); // TODO: change this dependency injection
+let User = require("./models/User.js")(mongoose);
 let Team = require("./models/Team.js")(mongoose);
 let Subdivision = require("./models/Subdivision.js")(mongoose);
 
@@ -121,9 +121,9 @@ let morteam = require("../morteam-server-website/server/server.js")(getImports()
 vh.register(config.host, morteam);
 vh.register("www." + config.host, morteam);
 
-let morscout = require("../morscout-server/server.js")(getImports());
-vh.register("scout." + config.host, morscout);
-vh.register("www.scout." + config.host, morscout);
+//let morscout = require("../morscout-server/server.js")(getImports());
+//vh.register("scout." + config.host, morscout);
+//vh.register("www.scout." + config.host, morscout);
 
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
