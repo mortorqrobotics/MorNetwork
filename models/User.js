@@ -28,21 +28,15 @@ module.exports = function(mongoose) {
 		created_at:   Date,
 		updated_at:   Date,
 		profpicpath:  String,
-		teams:        [{
-			_id: { type: ObjectId, ref: "Team" },
-			position: String
-		}], // Array of ids of teams of which said user is a member. IMPORTANT: id != _id (for "teams" a non-random id is used as opposed to an _id)
-		subdivisions: [{
+		subdivisions: [{ // this whole thing is going to get changed soon
 			_id: { type: ObjectId, ref: "Subdivision" },
 			team: String, // TODO: get rid of this; it is unnecessary
 			accepted: Boolean
 		}],
-		current_team: {
-			_id: { type: ObjectId, ref: "Team" },
-			position: String,
-			scoutCaptain: { type: Boolean, default: false }
-		},
-		bannedFromTeams: [{ type: ObjectId, ref: "Team" }] // Array of ids of teams from which said user is banned
+		team: { type: ObjectId, ref: "Team" },
+		position: String,
+		scoutCaptain: { type: Boolean, default: false },
+		bannedFromTeams: { type: [{ type: ObjectId, ref: "Team" }], default: [] }
 	});
 
 	userSchema.pre("save", function(next){
