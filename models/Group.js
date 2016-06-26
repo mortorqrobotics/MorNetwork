@@ -5,7 +5,7 @@ module.exports = function(mongoose) {
 	let Promise = require("bluebird");
     let Schema = mongoose.Schema;
     let ObjectId = Schema.Types.ObjectId;
-    
+
     let groupSchema = new Schema({
 		members: { type: [{ type: ObjectId, ref: "User" }], required: true },
         dependentGroups: { type: [{ type: ObjectId, ref: "Group" }], required: true }
@@ -26,10 +26,9 @@ module.exports = function(mongoose) {
 		}
 		next();
 	});
-    
-    let Group = mongoose.model("Group", groupSchema);
-    
-    return Group;
-    
-};
 
+    let Group = mongoose.model("Group", groupSchema);
+
+    return Group;
+
+};
