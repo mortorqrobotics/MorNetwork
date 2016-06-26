@@ -7,7 +7,7 @@ module.exports = function(mongoose) {
     
     let groupSchema = new Schema({
         members: [{type: ObjectId, ref: "User"}],
-        dependantGroups: [{type: ObjectId, ref: "Group"}]
+        dependentGroups: [{type: ObjectId, ref: "Group"}]
     });
     
     groupSchema.pre("save", function(next){
