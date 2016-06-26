@@ -28,11 +28,6 @@ module.exports = function(mongoose) {
 		created_at:   Date,
 		updated_at:   Date,
 		profpicpath:  String,
-		subdivisions: [{ // this whole thing is going to get changed soon
-			_id: { type: ObjectId, ref: "Subdivision" },
-			team: String, // TODO: get rid of this; it is unnecessary
-			accepted: Boolean
-		}],
 		team: { type: ObjectId, ref: "Team" },
 		position: {
 			type: String,
