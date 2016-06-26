@@ -1,4 +1,4 @@
-"use strict";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"use strict";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 module.exports = function(mongoose) {
     
@@ -6,7 +6,8 @@ module.exports = function(mongoose) {
     let ObjectId = Schema.Types.ObjectId;
     
     let groupSchema = new Schema({
-        members: [{type: ObjectId, ref: "User"}]
+        members: [{type: ObjectId, ref: "User"}],
+        dependantGroups: [{type: ObjectId, ref: "Group"}]
     });
     
     groupSchema.pre("save", function(next){
