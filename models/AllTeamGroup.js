@@ -1,9 +1,10 @@
 "use strict";
 
-module.exports = function(mongoose) {
+module.exports = function() {
 
+	let mongoose = require("mongoose");
 	let ObjectId = Schema.Types.ObjectId;
-	let Shema = mongoose.Schema;
+	let Schema = mongoose.Schema;
 	let Promise = require("bluebird");
 
 	let allTeamGroupSchema = new Schema({
@@ -27,3 +28,4 @@ module.exports = function(mongoose) {
 	return AllTeamGroup;
 
 };
+

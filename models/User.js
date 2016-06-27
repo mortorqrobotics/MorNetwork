@@ -1,7 +1,8 @@
 "use strict";
 
-module.exports = function(mongoose) {
+module.exports = function() {
 
+	let mongoose = require("mongoose");
 	let bcrypt = require("bcrypt");
 	let Schema = mongoose.Schema;
 	let ObjectId = Schema.Types.ObjectId;

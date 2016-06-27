@@ -1,7 +1,8 @@
 "use strict";
 
-module.exports = function(mongoose) {
+module.exports = function() {
 
+	let mongoose = require("mongoose");
 	let Promise = require("bluebird");
 	let Schema = mongoose.Schema;
 	let ObjectId = Schema.Types.ObjectId;

@@ -1,7 +1,8 @@
 "use strict";
 
-module.exports = function(mongoose) {
+module.exports = function() {
 
+	let mongoose = require("mongoose");
 	let Group = require("./Group");
 	let User = require("./User");
 	let Schema = mongoose.Schema;
