@@ -69,34 +69,36 @@ module.exports = function(mongoose) {
 		let user = this;
 		var orignalVal = user.position;
 		user.oldPosition = user.position;
-	});//TODO: does this have to set the new value??????????????
+	}); // TODO: does this have to set the new value?
 
 	userSchema.pre("save", Promise.coroutine(function*(next) {
-	    let user = this;
+		let user = this;
 
-	    if (!user.isModified("position")) return next();
+		if (!user.isModified("position")) return next();
 
-	    if (user.oldPosition) {
-	    	let positionGroup = require("./additionGroup");
-	    	let group = yield positionGroup.findOne({
-	    		position: user.oldPosition,
-	    		team: user.team
-	    	});
-	    	if (group) {
-	    		group.updateMembers();
-	    	}
-	    }
-	    if (user.position) { // TODO: needs refactoring
-	    	let positionGroup = require("./additionGroup");
-	    	let group = yield positionGroup.findOne({
-	    		position: user.position,
-	    		team: user.team
-	    	});
-	    	if (group) {
-	    		group.updateMembers();
-	    	}
-	    }
-	    next();
+		if (user.oldPosition) {
+			let positionGroup = require("./additionGroup");
+			let group = yield positionGroup.findOne({
+				position: user.oldPosition,
+				team: user.team
+			});
+			if (group) {
+				group.updateMembers();
+			}
+		}
+
+		if (user.position) { // TODO: needs refactoring
+			let positionGroup = require("./additionGroup");
+			let group = yield positionGroup.findOne({
+				position: user.position,
+				team: user.team
+			});
+			if (group) {
+				group.updateMembers();
+			}
+		}
+
+		next();
 	}));
 
 	userSchema.methods.comparePassword = function(candidatePassword) {
@@ -111,19 +113,6 @@ module.exports = function(mongoose) {
 			});
 		});
 	};
-
-	// userSchema.methods.assignNewPassword = function(cb) {
-	//   var user = this;
-	//   var new_password = createToken(8);
-	//   bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
-	//       if (err) return cb(err, null);
-	//       bcrypt.hash(new_password, salt, function(err, hash) {
-	//           if (err) return cb(err, null);
-	//           user.password = hash;
-	//           cb(null, new_password)
-	//       });
-	//   });
-	// }
 
 	userSchema.methods.assignNewPassword = function() {
 		let user = this;

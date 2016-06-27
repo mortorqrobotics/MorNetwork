@@ -2,34 +2,39 @@
 
 module.exports = function(mongoose) {
 
-    let Group = require("./Group");
-    let User = require("./User");
-    let Schema = mongoose.Schema;
-    let ObjectId = Schema.Types.ObjectId;
-    let Promise = require("bluebird");
+	let Group = require("./Group");
+	let User = require("./User");
+	let Schema = mongoose.Schema;
+	let ObjectId = Schema.Types.ObjectId;
+	let Promise = require("bluebird");
 
-    let positionGroupSchema = new Schema({
+	let positionGroupSchema = new Schema({
 
-        position: [{type: String,
-        enum: ["member", "leader", "mentor", "admin"]}],
+		position: [{
+			type: String,
+			enum: ["member", "leader", "mentor", "admin"]
+		}],
 
-        team: [{type: ObjectId, ref: "Team"}]
-    });
+		team: [{ type: ObjectId, ref: "Team" }]
+	});
 
-    Schema.methods.updateMembers = Promise.coroutine(function*() {
-        let group = this;
+	Schema.methods.updateMembers = Promise.coroutine(function*() {
+		let group = this;
 
-        try {
-            group.members = yield User.find({team: group.team, position: group.position});
-            group.updateDependents();
-        } catch(err) {
-            console.error(err);
-        }
+		try {
+			group.members = yield User.find({
+				team: group.team,
+				position: group.position
+			});
+			group.updateDependents();
+		} catch(err) {
+			console.error(err);
+		}
 
-    });
+	});
 
-    let PositionGroup = Group.discriminator("PositionGroup", positionGroupSchema);
-    
-    return PositionGroup;
+	let PositionGroup = Group.discriminator("PositionGroup", positionGroupSchema);
+
+	return PositionGroup;
 
 };
