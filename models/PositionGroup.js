@@ -11,15 +11,16 @@ module.exports = function() {
 
 	let positionGroupSchema = new Schema({
 
-		position: [{
+		position: {
 			type: String,
-			enum: ["member", "leader", "mentor", "admin"]
-		}],
+			enum: ["member", "leader", "mentor", "admin"],
+			required: true
+		},
 
-		team: [{ type: ObjectId, ref: "Team" }]
+		team: { type: ObjectId, ref: "Team", required: true }
 	});
 
-	Schema.methods.updateMembers = Promise.coroutine(function*() {
+	positionGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
 		let group = this;
 
 		try {
@@ -31,7 +32,7 @@ module.exports = function() {
 		} catch(err) {
 			console.error(err);
 		}
-
+		// TODO: should these all call this.save?
 	});
 
 	let PositionGroup = Group.discriminator("PositionGroup", positionGroupSchema);

@@ -9,13 +9,14 @@ module.exports = function(){
 	let Promise = require("bluebird");
 
 	let normalGroupSchema = new Schema({
-		users: [{ type: ObjectId, ref: "User" }],
-		groups: [{ type: ObjectId, ref: "Group" }]
+		users: { type: [{ type: ObjectId, ref: "User" }], required: true },
+		groups: { type: [{ type: ObjectId, ref: "Group" }], required: true }
 	});
 
 	function removeDuplicates(arr) {
+		// TODO: make this faster
 		for (let i = 0; i < arr.length; i++) {
-			if (i !== arr.indexOf(arr[i])) {
+			if (arr.indexOf(arr[i]) !== 1) {
 				arr.splice(i, 1);
 				i--;
 			}
@@ -27,8 +28,10 @@ module.exports = function(){
 		try {
 			let userIds = group.users;
 			for (let groupId of group.groups) {
-				let oneGroup = yield Group.findOne({_id: groupId});
-				Array.prototype.push.apply(userIds, oneGroup.members);
+				let otherGroup = yield Group.findOne({
+					_id: groupId
+				});
+				Array.prototype.push.apply(userIds, otherGroup.members);
 			}
 			removeDuplicates(userIds);
 			group.members = userIds;
