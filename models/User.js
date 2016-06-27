@@ -68,7 +68,39 @@ module.exports = function(mongoose) {
 			});
 		});
 	});
-
+	userSchema.path("position").set(function(newVal){
+		let user = this;
+		var orignalVal = user.position;
+		user.oldPosition = user.position;
+	});//TODO: does this have to set the new value??????????????
+	
+	userSchema.pre("save", Promise.coroutine(function*(next) {
+	    let user = this;
+	    
+	    if(!user.isModified("position")) return next();
+	    
+	    if(user.oldPosition){
+	    	let positionGroup = require("./additionGroup");
+	    	let group = yield positionGroup.findOne({
+	    		position: user.oldPosition, 
+	    		team: user.team
+	    	});
+	    	if(group){
+	    		group.updateMembers();
+	    	}
+	    }
+	    if(user.position) { // TODO: needs refactoring
+	    	let positionGroup = require("./additionGroup");
+	    	let group = yield positionGroup.findOne({
+	    		position: user.position, 
+	    		team: user.team
+	    	});
+	    	if(group){
+	    		group.updateMembers();
+	    	}
+	    }
+	    next();
+	}));
 	userSchema.methods.comparePassword = function(candidatePassword) {
 		let password = this.password;
 		return new Promise(function(resolve, reject) { // antipattern but whatever
