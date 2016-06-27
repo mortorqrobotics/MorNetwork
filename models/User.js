@@ -42,7 +42,7 @@ module.exports = function(mongoose) {
 		bannedFromTeams: { type: [{ type: ObjectId, ref: "Team" }], default: [] }
 	});
 
-	userSchema.pre("save", function(next){
+	userSchema.pre("save", function(next) {
 		if (this.isModified("current_team")) return next();
 
 		let now = new Date();
@@ -52,6 +52,7 @@ module.exports = function(mongoose) {
 		}
 		next();
 	});
+
 	userSchema.pre("save", function(next) {
 		let user = this;
 
@@ -68,39 +69,41 @@ module.exports = function(mongoose) {
 			});
 		});
 	});
-	userSchema.path("position").set(function(newVal){
+
+	userSchema.path("position").set(function(newVal) {
 		let user = this;
 		var orignalVal = user.position;
 		user.oldPosition = user.position;
 	});//TODO: does this have to set the new value??????????????
-	
+
 	userSchema.pre("save", Promise.coroutine(function*(next) {
 	    let user = this;
-	    
-	    if(!user.isModified("position")) return next();
-	    
-	    if(user.oldPosition){
+
+	    if (!user.isModified("position")) return next();
+
+	    if (user.oldPosition) {
 	    	let positionGroup = require("./additionGroup");
 	    	let group = yield positionGroup.findOne({
-	    		position: user.oldPosition, 
+	    		position: user.oldPosition,
 	    		team: user.team
 	    	});
-	    	if(group){
+	    	if (group) {
 	    		group.updateMembers();
 	    	}
 	    }
-	    if(user.position) { // TODO: needs refactoring
+	    if (user.position) { // TODO: needs refactoring
 	    	let positionGroup = require("./additionGroup");
 	    	let group = yield positionGroup.findOne({
-	    		position: user.position, 
+	    		position: user.position,
 	    		team: user.team
 	    	});
-	    	if(group){
+	    	if (group) {
 	    		group.updateMembers();
 	    	}
 	    }
 	    next();
 	}));
+
 	userSchema.methods.comparePassword = function(candidatePassword) {
 		let password = this.password;
 		return new Promise(function(resolve, reject) { // antipattern but whatever
