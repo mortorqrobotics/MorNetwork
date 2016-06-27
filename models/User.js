@@ -7,6 +7,7 @@ module.exports = function() {
 	let Schema = mongoose.Schema;
 	let ObjectId = Schema.Types.ObjectId;
 	let Promise = require("bluebird");
+	let PositionGroup = require("./PositionGroup");
 	let SALT_WORK_FACTOR = 10;
 
 	function createToken(size) {
@@ -66,20 +67,21 @@ module.exports = function() {
 		});
 	});
 
-	userSchema.path("position").set(function(newVal) {
+	userSchema.path("position").set(function(newPosition) {
 		let user = this;
-		var orignalVal = user.position;
 		user.oldPosition = user.position;
-	}); // TODO: does this have to set the new value?
+		// TODO: does this have to set the new value?
+	});
 
 	userSchema.pre("save", Promise.coroutine(function*(next) {
 		let user = this;
 
-		if (!user.isModified("position")) return next();
+		if (!user.isModified("position")) {
+			return next();
+		}
 
 		if (user.oldPosition) {
-			let positionGroup = require("./additionGroup");
-			let group = yield positionGroup.findOne({
+			let group = yield PositionGroup.findOne({
 				position: user.oldPosition,
 				team: user.team
 			});
@@ -89,8 +91,7 @@ module.exports = function() {
 		}
 
 		if (user.position) { // TODO: needs refactoring
-			let positionGroup = require("./additionGroup");
-			let group = yield positionGroup.findOne({
+			let group = yield PositionGroup.findOne({
 				position: user.position,
 				team: user.team
 			});
