@@ -137,6 +137,7 @@ module.exports = function() {
 				}
 		}
 		
+		next();
 	}));
 
 	userSchema.methods.comparePassword = function(candidatePassword) {
