@@ -2,7 +2,7 @@
   "name": "MorNetwork",
   "version": "1.0.0",
   "description": "Main server for MorTorq web applications",
-  "main": "server.js",
+  "main": "src/server.js",
   "dependencies": {
     "bcrypt": "^0.8.5",
     "bluebird": "^3.3.5",
