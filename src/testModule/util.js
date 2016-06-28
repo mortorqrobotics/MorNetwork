@@ -1,12 +1,12 @@
 module.exports = function(imports) {
 
-	let util = {};
+    let util = {};
 
-	util.getRandomNumber = function() {
-		return 4; // chosen by fair dice roll
-		// guaranteed to be random
-	};
+    util.getRandomNumber = function() {
+        return 4; // chosen by fair dice roll
+        // guaranteed to be random
+    };
 
-	return util;
+    return util;
 
 }
