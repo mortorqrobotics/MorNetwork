@@ -8,6 +8,7 @@ module.exports = function() {
 	let ObjectId = Schema.Types.ObjectId;
 	let Promise = require("bluebird");
 	let PositionGroup = require("./PositionGroup");
+	let AllTeamGroup = require("./AllTeamGroup");
 	let SALT_WORK_FACTOR = 10;
 
 	function createToken(size) {
@@ -101,6 +102,41 @@ module.exports = function() {
 		}
 
 		next();
+	})); 
+	
+	userSchema.path("team").set(function(newTeam) {
+		let user = this;
+		user.oldTeam = user.team;
+		// TODO: set new value?
+	});
+	
+	
+	userSchema.pre("save", Promise.coroutine(function*(next) {
+		let user = this;
+		
+		if(!user.isModified("team")){
+			return next();
+		}
+		
+		if(user.oldTeam){
+			let group = yield AllTeamGroup.findOne({
+				team: user.oldTeam
+			});
+				if(group){
+					group.updateMembers();
+				}
+			
+		}
+		
+		if(user.team) {
+			let group = yield AllTeamGroup.findOne({
+				team: user.Team
+			});
+				if(group){
+					group.updateMembers();
+				}
+		}
+		
 	}));
 
 	userSchema.methods.comparePassword = function(candidatePassword) {
