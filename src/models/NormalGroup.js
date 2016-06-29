@@ -65,18 +65,6 @@ module.exports = function() {
 
     let NormalGroup = Group.discriminator("NormalGroup", normalGroupSchema);
 
-    return NormalGroup; <<
-    << << < HEAD
+    return NormalGroup; 
 
-
-
-
-        ===
-        === =
-
-
-
-
-        >>>
-        >>> > 0e3 f948bd24355ffb71313b0e991a4bd3f17411f
 };
