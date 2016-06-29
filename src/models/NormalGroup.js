@@ -53,46 +53,21 @@ module.exports = function() {
         }
     });
 
-    normalGroupSchema.path("users").set(function(newUsers){
-        let normalGroup = this;
-        normalGroup.oldUsers = normalGroup.users; 
-        // TODO: Should set a new value?
-    });
-    
-    normalGroupSchema.pre("save", Promise.coroutine(function*(next){
-        let normalGroup = this;
-        
-        if(!normalGroup.isModified("users")){
-            return next();
+    normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
+        let group = this;
+
+        if (normalGroup.isModified("users")) {
+            group.updateMembers();
         }
-        
-        if(normalGroup.oldUsers){
-            let group = yield normalGroupSchema.findOne({
-                users: normalGroup.oldUsers
-            })
-            
-            if(group){
-                group.updateMembers();
-            }
-        }
-        
-            if(normalGroup.users){
-            let group = yield normalGroupSchema.findOne({
-                users: normalGroup.users
-            })
-            
-            if(group){
-                group.updateMembers();
-            }
-        }
+
         next();
     }));
-    
+
     let NormalGroup = Group.discriminator("NormalGroup", normalGroupSchema);
 
-        return NormalGroup;
-    
-   
-    
-    
+    return NormalGroup;
+
+
+
+
 };
