@@ -90,7 +90,7 @@ module.exports = function() {
     
     let NormalGroup = Group.discriminator("NormalGroup", normalGroupSchema);
 
-        return NormalGroup;
+    return NormalGroup;
     
    
     
