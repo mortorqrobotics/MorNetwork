@@ -47,7 +47,7 @@ module.exports = function() {
             }
             removeDuplicates(userIds);
             group.members = userIds;
-            group.updateDependents();
+            group.updateDependentsMembers();
         } catch (err) {
             console.error(err);
         }

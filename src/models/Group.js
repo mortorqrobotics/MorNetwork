@@ -24,7 +24,7 @@ module.exports = function() {
         }
     });
 
-    groupSchema.methods.updateDependents = Promise.coroutine(function*() {
+    groupSchema.methods.updateDependentsMembers = Promise.coroutine(function*() {
         let group = this;
         for (let dependent of group.dependentGroups) {
             yield dependent.updateMembers();
