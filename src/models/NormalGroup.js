@@ -64,8 +64,15 @@ module.exports = function() {
         next();
     }));
 
-    normalGroupSchema.path("groups").set(function() { // TODO: cause trigger on push from server
-        this.oldGroups = this.groups;
+    normalGroupSchema.path("groups").set(function() {
+        // TODO: this is not called when an element is pushed to the array
+        let self = this;
+
+        // make sure they do not share a reference
+        self.oldGroups = [];
+        for (let groupId of self.groups) {
+            self.oldGroups.push(groupId);
+        }
     });
 
     normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
