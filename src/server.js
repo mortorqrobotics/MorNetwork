@@ -37,12 +37,12 @@ let app = express();
 // connect to mongodb server
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
 
-let User = require("./models/User.js")();
-let Team = require("./models/Team.js")();
-let Group = require("./models/Group.js")();
-let NormalGroup = require("./models/NormalGroup.js")();
-let AllTeamGroup = require("./models/AllTeamGroup.js")();
-let PositionGroup = require("./models/PositionGroup.js")();
+let User = require("./models/User.js");
+let Team = require("./models/Team.js");
+let Group = require("./models/Group.js");
+let NormalGroup = require("./models/NormalGroup.js");
+let AllTeamGroup = require("./models/AllTeamGroup.js");
+let PositionGroup = require("./models/PositionGroup.js");
 
 // start server
 let port = process.argv[2] || 8080;
