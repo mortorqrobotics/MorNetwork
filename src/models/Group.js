@@ -31,6 +31,17 @@ module.exports = function() {
         }
     });
 
+    groupSchema.pre("save", function(next) {
+        if (this.__t) {
+            return next();
+        }
+
+        // __t is not defined for generic groups
+        // a generic group should never be created, so it should not be saved
+        throw new Error("A generic group document should never be created.");
+
+    });
+
     let Group = mongoose.model("Group", groupSchema);
 
     return Group;

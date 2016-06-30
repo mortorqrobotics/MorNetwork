@@ -32,7 +32,7 @@ module.exports = function() {
                 team: group.team,
                 position: group.position
             });
-            group.updateDependentsMembers();
+            yield group.updateDependentsMembers();
         } catch (err) {
             console.error(err);
         }

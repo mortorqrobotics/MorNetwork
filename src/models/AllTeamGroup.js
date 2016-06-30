@@ -21,7 +21,7 @@ module.exports = function() {
             let group.members = yield User.find({
                 team: group.team
             });
-            group.updateDependentsMembers();
+            yield group.updateDependentsMembers();
         } catch (err) {
             console.error(err);
         }

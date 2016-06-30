@@ -48,7 +48,7 @@ module.exports = function() {
             }
             removeDuplicates(userIds);
             self.members = userIds;
-            self.updateDependentsMembers();
+            yield self.updateDependentsMembers();
         } catch (err) {
             console.error(err);
         }
