@@ -36,68 +36,69 @@ module.exports = function() {
     }
 
     normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
-        let group = this;
+        let self = this;
+
         try {
-            let userIds = group.users;
-            for (let groupId of group.groups) {
-                let otherGroup = yield Group.findOne({
+            let userIds = self.users;
+            for (let groupId of self.groups) {
+                let group = yield Group.findOne({
                     _id: groupId
                 });
-                Array.prototype.push.apply(userIds, otherGroup.members);
+                Array.prototype.push.apply(userIds, group.members);
             }
             removeDuplicates(userIds);
-            group.members = userIds;
-            group.updateDependentsMembers();
+            self.members = userIds;
+            self.updateDependentsMembers();
         } catch (err) {
             console.error(err);
         }
     });
 
     normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
-        let group = this;
+        let self = this;
 
-        if (group.isModified("users")) {
-            group.updateMembers();
+        if (self.isModified("users")) {
+            self.updateMembers();
         }
 
         next();
     }));
 
     normalGroupSchema.path("groups").set(function() { // TODO: cause trigger on push from server
-        let group = this;
-        group.oldGroups = group.groups;
+        this.oldGroups = this.groups;
     });
 
     normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
-        let group = this;
+        let self = this;
 
-        if (!group.isModified("groups")) {
+        if (!self.isModified("groups")) {
             return next();
         }
 
-        for (let i = 0; i < group.groups.length; i++) {
-            if (group.oldGroups.indexOf(group.groups[i]) === -1) {
-                let groups = yield Group.find({
-                    _id: group.groups[i]
+        for (let newGroupId of self.groups) {
+            if (self.oldGroups.indexOf(newGroupId) === -1) {
+                yield Group.findOneAndUpdate({
+                    _id: newGroupId
+                }, {
+                    $push: {
+                        dependentGroups: self._id
+                    }
                 });
-                for (let iteratedGroup of groups) {
-                    iteratedGroup.dependentGroups.push(group);
-                    iteratedGroup.save();
-                }
+            }
+
+        }
+        for (let oldGroupId of self.oldGroups) {
+            if (self.groups.indexOf(oldGroupId) === -1) {
+                yield Group.findOneAndUpdate({
+                    _id: oldGroupId
+                }, {
+                    $pull: {
+                        dependentGroups: self._id
+                    }
+                });
             }
         }
-        for (let i = 0; i < group.oldGroups.length; i++) {
-            if (group.groups.indexOf(group.oldGroups[i]) === -1) {
-                let groups = yield Group.find({
-                    _id: group.oldGroups[i]
-                });
-                for (let iteratedGroup of groups) {
-                    let dependents = iteratedGroup.dependentGroups;
-                    dependents.splice(dependents.indexOf(group), 1);
-                    iteratedGroup.save();
-                }
-            }
-        }
+
         next();
     }));
 
