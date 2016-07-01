@@ -14,12 +14,13 @@ let allTeamGroupSchema = new Schema({
 });
 
 allTeamGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
-    let group = this;
     try {
-        let group.members = yield User.find({
-            team: group.team
-        });
-        yield group.updateDependentsMembers();
+
+        this.members = yield User.find({
+            team: this.team
+        }).map(user => user._id);
+
+        yield this.updateDependentsMembers();
     } catch (err) {
         console.error(err);
     }

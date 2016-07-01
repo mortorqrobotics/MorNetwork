@@ -23,14 +23,14 @@ let positionGroupSchema = new Schema({
 });
 
 positionGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
-    let group = this;
-
     try {
-        group.members = yield User.find({
-            team: group.team,
-            position: group.position
-        });
-        yield group.updateDependentsMembers();
+
+        this.members = yield User.find({
+            team: this.team,
+            position: this.position
+        }).map(user => user._id);
+
+        yield this.updateDependentsMembers();
     } catch (err) {
         console.error(err);
     }

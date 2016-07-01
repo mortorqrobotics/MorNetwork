@@ -23,13 +23,13 @@ let groupSchema = new Schema({
 });
 
 groupSchema.methods.updateDependentsMembers = Promise.coroutine(function*() {
-    let group = this;
-    for (let dependent of group.dependentGroups) {
+    for (let dependent of this.dependentGroups) {
         yield dependent.updateMembers();
     }
 });
 
 groupSchema.pre("save", function(next) {
+
     if (this.__t) {
         return next();
     }

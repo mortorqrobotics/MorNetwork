@@ -34,74 +34,78 @@ function removeDuplicates(arr) {
 }
 
 normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
-    let self = this;
-
     try {
-        let userIds = self.users;
-        for (let groupId of self.groups) {
+
+        let userIds = this.users;
+        for (let groupId of this.groups) {
             let group = yield Group.findOne({
                 _id: groupId
             });
             Array.prototype.push.apply(userIds, group.members);
         }
         removeDuplicates(userIds);
-        self.members = userIds;
-        yield self.updateDependentsMembers();
+        this.members = userIds;
+
+        yield this.updateDependentsMembers();
     } catch (err) {
         console.error(err);
     }
 });
 
-normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
-    let self = this;
+normalGroupSchema.path("groups").get(function(value) {
 
-    if (self.isModified("users")) {
-        self.updateMembers();
+    if (!("oldGroups" in this)) {
+        this.oldGroups = Array.prototype.slice.call(value);
     }
 
-    next();
-}));
+    return value;
+});
 
-normalGroupSchema.path("groups").set(function() {
-    // TODO: this is not called when an element is pushed to the array
-    let self = this;
+normalGroupSchema.path("groups").set(function(value) {
 
-    // make sure they do not share a reference
-    self.oldGroups = [];
-    for (let groupId of self.groups) {
-        self.oldGroups.push(groupId);
-    }
+    // yes, this does something
+    // it calls the getter
+    // the old value is recorded if the getter was not called before
+    this.groups;
+
+    return value;
 });
 
 normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
-    let self = this;
 
-    if (!self.isModified("groups")) {
-        return next();
-    }
+    if (this.isModified("groups")) {
 
-    for (let newGroupId of self.groups) {
-        if (self.oldGroups.indexOf(newGroupId) === -1) {
-            yield Group.findOneAndUpdate({
-                _id: newGroupId
-            }, {
-                $push: {
-                    dependentGroups: self._id
-                }
-            });
+        for (let newGroupId of this.groups) {
+            if (this.oldGroups.indexOf(newGroupId) === -1) {
+                yield Group.findOneAndUpdate({
+                    _id: newGroupId
+                }, {
+                    $push: {
+                        dependentGroups: this._id
+                    }
+                });
+            }
+
         }
 
-    }
-    for (let oldGroupId of self.oldGroups) {
-        if (self.groups.indexOf(oldGroupId) === -1) {
-            yield Group.findOneAndUpdate({
-                _id: oldGroupId
-            }, {
-                $pull: {
-                    dependentGroups: self._id
-                }
-            });
+        for (let oldGroupId of this.oldGroups) {
+            if (this.groups.indexOf(oldGroupId) === -1) {
+                yield Group.findOneAndUpdate({
+                    _id: oldGroupId
+                }, {
+                    $pull: {
+                        dependentGroups: this._id
+                    }
+                });
+            }
         }
+    }
+
+    // isModified does check for deep equality
+    // it will detect stuff like elements pushed to an array
+    // instead of just comparing references
+    if (this.isModified("groups") || this.isModified("users")) {
+        yield this.updateMembers();
     }
 
     next();
