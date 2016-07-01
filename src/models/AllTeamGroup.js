@@ -16,9 +16,9 @@ let allTeamGroupSchema = new Schema({
 allTeamGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
     try {
 
-        this.members = yield User.find({
+        this.members = (yield User.find({
             team: this.team
-        }).map(user => user._id);
+        })).map(user => user._id);
 
         yield this.updateDependentsMembers();
     } catch (err) {
