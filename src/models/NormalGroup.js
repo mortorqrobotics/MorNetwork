@@ -36,7 +36,10 @@ function removeDuplicates(arr) {
 normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
     try {
 
-        let userIds = this.users;
+        // have to create a copy of the array instead of copying the reference
+        // otherwise the users property would be the same as members
+        let userIds = Array.prototype.slice.call(this.users);
+
         for (let groupId of this.groups) {
             let group = yield Group.findOne({
                 _id: groupId
