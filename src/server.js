@@ -17,8 +17,9 @@ let Promise = require("bluebird");
 mongoose.Promise = Promise;
 
 let config; // contains passwords and other sensitive info
-if (fs.existsSync("config.json")) {
-    config = require("./config.json");
+let configPath = require("path").join(__dirname, "../config.json");
+if (fs.existsSync(configPath)) {
+    config = require(configPath);
 } else {
     config = {
         "sessionSecret": "secret",
@@ -28,7 +29,7 @@ if (fs.existsSync("config.json")) {
             // localhost test.dev
             // then navigate to www.test.dev:8080 in browser for testing
     };
-    fs.writeFileSync("config.json", JSON.stringify(config, null, "\t"));
+    fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
     console.log("Generated default config.json");
 }
 // create express application
