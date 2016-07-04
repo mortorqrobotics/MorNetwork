@@ -23,14 +23,17 @@ let normalGroupSchema = new Schema({
     }
 });
 
-function removeDuplicates(arr) {
-    // TODO: make this faster
+function removeDuplicates(arr){
+    let seen = {};
+    let result = [];
     for (let i = 0; i < arr.length; i++) {
-        if (arr.indexOf(arr[i]) !== 1) {
-            arr.splice(i, 1);
-            i--;
+        let item = arr[i];
+        if (!seen[item]) {
+            seen[item] = true;
+            result.push(item);
         }
-    }
+     }
+    return result;
 }
 
 normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
@@ -46,7 +49,7 @@ normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
             });
             Array.prototype.push.apply(userIds, group.members);
         }
-        removeDuplicates(userIds);
+        userIds = removeDuplicates(userIds);
         this.members = userIds;
 
         yield this.updateDependentsMembers();
