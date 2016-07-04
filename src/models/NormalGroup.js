@@ -20,6 +20,10 @@ let normalGroupSchema = new Schema({
             ref: "Group"
         }],
         required: true
+    },
+    isHidden: {
+        type: Boolean,
+        default: false
     }
 });
 
