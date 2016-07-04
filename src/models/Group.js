@@ -42,4 +42,4 @@ groupSchema.pre("save", function(next) {
 
 let Group = mongoose.model("Group", groupSchema);
 
-return Group;
+module.exports = Group;

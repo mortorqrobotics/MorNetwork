@@ -16,8 +16,12 @@ let vh = require("express-vhost");
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
 
+function getPath(path) {
+    return require("path").join(__dirname, path);
+}
+
 let config; // contains passwords and other sensitive info
-let configPath = require("path").join(__dirname, "../config.json");
+let configPath = getPath("../config.json");
 if (fs.existsSync(configPath)) {
     config = require(configPath);
 } else {
@@ -125,7 +129,7 @@ app.use(Promise.coroutine(function*(req, res, next) {
 }));
 
 
-let morteam = require("../morteam-server-website/server/server.js")(getImports());
+let morteam = require(getPath("../../morteam-server-website/server/server.js"))(getImports());
 vh.register(config.host, morteam);
 vh.register("www." + config.host, morteam);
 

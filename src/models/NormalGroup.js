@@ -27,7 +27,7 @@ let normalGroupSchema = new Schema({
     }
 });
 
-function removeDuplicates(arr){
+function removeDuplicates(arr) {
     let seen = {};
     let result = [];
     for (let i = 0; i < arr.length; i++) {
@@ -36,7 +36,7 @@ function removeDuplicates(arr){
             seen[item] = true;
             result.push(item);
         }
-     }
+    }
     return result;
 }
 
@@ -123,4 +123,4 @@ normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
 
 let NormalGroup = Group.discriminator("NormalGroup", normalGroupSchema);
 
-return NormalGroup;
+module.exports = NormalGroup;

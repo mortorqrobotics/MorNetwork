@@ -39,4 +39,4 @@ positionGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
 
 let PositionGroup = Group.discriminator("PositionGroup", positionGroupSchema);
 
-return PositionGroup;
+module.exports = PositionGroup;

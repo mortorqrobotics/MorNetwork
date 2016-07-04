@@ -194,4 +194,4 @@ userSchema.methods.assignNewPassword = function() {
 
 let User = mongoose.model("User", userSchema);
 
-return User;
+module.exports = User;

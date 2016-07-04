@@ -1,9 +1,10 @@
 "use strict";
 
 let mongoose = require("mongoose");
-let ObjectId = Schema.Types.ObjectId;
 let Schema = mongoose.Schema;
+let ObjectId = Schema.Types.ObjectId;
 let Promise = require("bluebird");
+let Group = require("./Group");
 
 let allTeamGroupSchema = new Schema({
     team: {
@@ -28,4 +29,4 @@ allTeamGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
 
 let AllTeamGroup = Group.discriminator("AllTeamGroup", allTeamGroupSchema);
 
-return AllTeamGroup;
+module.exports = AllTeamGroup;

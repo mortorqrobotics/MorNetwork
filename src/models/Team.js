@@ -41,4 +41,4 @@ teamSchema.pre("save", function(next) {
 
 let Team = mongoose.model("Team", teamSchema);
 
-return Team;
+module.exports = Team;
