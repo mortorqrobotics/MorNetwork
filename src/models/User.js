@@ -107,7 +107,7 @@ userSchema.path("position").set(function(newPosition) {
     // TODO: does this have to set the new value?
 });
 
-userSchema.pre("save", coroutine(function*() {
+userSchema.pre("save", coroutine(function*(next) {
     let user = this;
 
     if (!user.isModified("position")) {
@@ -144,7 +144,7 @@ userSchema.path("team").set(function(newTeam) {
 });
 
 
-userSchema.pre("save", coroutine(function*() {
+userSchema.pre("save", coroutine(function*(next) {
     let user = this;
 
     if (!user.isModified("team")) {
