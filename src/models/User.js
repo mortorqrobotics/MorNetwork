@@ -106,7 +106,7 @@ userSchema.path("position").set(function(newPosition) {
     // TODO: does this have to set the new value?
 });
 
-userSchema.pre("save", Promise.coroutine(function*(next) {
+userSchema.pre("save", function(next){(Promise.coroutine(function*() {
     let user = this;
 
     if (!user.isModified("position")) {
@@ -134,7 +134,7 @@ userSchema.pre("save", Promise.coroutine(function*(next) {
     }
 
     next();
-}));
+})).bind(this)()});
 
 userSchema.path("team").set(function(newTeam) {
     let user = this;
@@ -143,7 +143,7 @@ userSchema.path("team").set(function(newTeam) {
 });
 
 
-userSchema.pre("save", Promise.coroutine(function*(next) {
+userSchema.pre("save", function(next){(Promise.coroutine(function*() {
     let user = this;
 
     if (!user.isModified("team")) {
@@ -170,7 +170,7 @@ userSchema.pre("save", Promise.coroutine(function*(next) {
     }
 
     next();
-}));
+})).bind(this)()});
 
 userSchema.methods.comparePassword = function(candidatePassword) {
     let password = this.password;
