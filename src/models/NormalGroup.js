@@ -5,6 +5,7 @@ let Group = require("./Group");
 let Schema = mongoose.Schema;
 let ObjectId = Schema.Types.ObjectId;
 let Promise = require("bluebird");
+let coroutine = require("./coroutine");
 
 let normalGroupSchema = new Schema({
     users: {
@@ -81,7 +82,7 @@ normalGroupSchema.path("groups").set(function(value) {
     return value;
 });
 
-normalGroupSchema.pre("save", Promise.coroutine(function*(next) {
+normalGroupSchema.pre("save", coroutine(function*(next) {
 
     if (this.isModified("groups")) {
 

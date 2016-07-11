@@ -7,6 +7,7 @@ let ObjectId = Schema.Types.ObjectId;
 let Promise = require("bluebird");
 let PositionGroup = require("./PositionGroup");
 let AllTeamGroup = require("./AllTeamGroup");
+let coroutine = require("./coroutine");
 let SALT_WORK_FACTOR = 10;
 
 function createToken(size) {
@@ -106,7 +107,7 @@ userSchema.path("position").set(function(newPosition) {
     // TODO: does this have to set the new value?
 });
 
-userSchema.pre("save", function(next){(Promise.coroutine(function*() {
+userSchema.pre("save", coroutine(function*() {
     let user = this;
 
     if (!user.isModified("position")) {
@@ -134,7 +135,7 @@ userSchema.pre("save", function(next){(Promise.coroutine(function*() {
     }
 
     next();
-})).bind(this)()});
+}));
 
 userSchema.path("team").set(function(newTeam) {
     let user = this;
@@ -143,7 +144,7 @@ userSchema.path("team").set(function(newTeam) {
 });
 
 
-userSchema.pre("save", function(next){(Promise.coroutine(function*() {
+userSchema.pre("save", coroutine(function*() {
     let user = this;
 
     if (!user.isModified("team")) {
@@ -170,7 +171,7 @@ userSchema.pre("save", function(next){(Promise.coroutine(function*() {
     }
 
     next();
-})).bind(this)()});
+}));
 
 userSchema.methods.comparePassword = function(candidatePassword) {
     let password = this.password;
