@@ -22,10 +22,6 @@ let normalGroupSchema = new Schema({
         }],
         required: true
     },
-    isHidden: {
-        type: Boolean,
-        default: false
-    }
 });
 
 function removeDuplicates(arr) {
