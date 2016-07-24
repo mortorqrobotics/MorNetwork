@@ -6,7 +6,7 @@
   "scripts": {
 	  "fmt": "for f in `find src -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done",
       "start": "node src/server",
-      "updateall": "git checkout mormap; git pull; npm install; cd ../morteam-server-website; git checkout mormap; git pull; npm install; cd ../morteam-web; git pull; npm install; npm run build"
+      "updateall": "git checkout mormap; git pull; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git checkout mormap; git pull; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull; npm install; npm run build"
   },
   "dependencies": {
     "bcrypt": "^0.8.5",
