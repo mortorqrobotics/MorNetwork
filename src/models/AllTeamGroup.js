@@ -17,11 +17,14 @@ let allTeamGroupSchema = new Schema({
 allTeamGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
     try {
 
-        this.members = (yield User.find({
+        // I tried importing User at the top
+        // but it is a circular dependency
+        this.members = (yield require("./User").find({
             team: this.team
         })).map(user => user._id);
 
         yield this.updateDependentsMembers();
+
     } catch (err) {
         console.error(err);
     }

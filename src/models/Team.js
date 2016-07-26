@@ -3,6 +3,9 @@
 let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
+let coroutine = require("./coroutine");
+let AllTeamGroup = require("./AllTeamGroup");
+
 let teamSchema = new Schema({
     id: {
         type: String,
@@ -36,8 +39,29 @@ teamSchema.pre("save", function(next) {
     if (!this.created_at) {
         this.created_at = now;
     }
+
+    this.wasNew = this.isNew; // for the post hook
+
     next();
 });
+
+teamSchema.post("save", coroutine(function*() {
+    if (!this.wasNew) {
+        return;
+    }
+
+    try {
+        yield AllTeamGroup.create({
+            team: this._id,
+            members: [],
+            dependentGroups: [],
+        });
+    } catch (err) {
+        // TODO: deal with this
+        console.log(err)
+    }
+
+}));
 
 let Team = mongoose.model("Team", teamSchema);
 

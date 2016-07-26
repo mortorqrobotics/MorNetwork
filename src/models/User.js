@@ -137,16 +137,16 @@ userSchema.pre("save", coroutine(function*(next) {
 
 userSchema.path("team").set(function(newTeam) {
     let user = this;
-    user.oldTeam = user.team;
+    user.oldTeam = user.team || null;
     return newTeam;
 });
 
 
-userSchema.pre("save", coroutine(function*(next) {
+userSchema.post("save", coroutine(function*() {
     let user = this;
 
-    if (!user.isModified("team")) {
-        return next();
+    if (typeof user.oldTeam == "undefined") {
+        return;
     }
 
     if (user.oldTeam) {
@@ -156,19 +156,18 @@ userSchema.pre("save", coroutine(function*(next) {
         if (group) {
             group.updateMembers();
         }
-
     }
 
     if (user.team) {
         let group = yield AllTeamGroup.findOne({
-            team: user.Team
+            team: user.team
         });
-        if (group) {
-            group.updateMembers();
+        if (group) { // TODO: this should always evaluate to true
+            yield group.updateMembers();
+            yield group.save();
         }
     }
 
-    next();
 }));
 
 userSchema.methods.comparePassword = function(candidatePassword) {

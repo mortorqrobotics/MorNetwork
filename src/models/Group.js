@@ -6,20 +6,14 @@ let Schema = mongoose.Schema;
 let ObjectId = Schema.Types.ObjectId;
 
 let groupSchema = new Schema({
-    members: {
-        type: [{
-            type: ObjectId,
-            ref: "User"
-        }],
-        required: true
-    },
-    dependentGroups: {
-        type: [{
-            type: ObjectId,
-            ref: "Group"
-        }],
-        required: true
-    }
+    members: [{
+        type: ObjectId,
+        ref: "User"
+    }],
+    dependentGroups: [{
+        type: ObjectId,
+        ref: "Group" // TODO: should this be normalgroup?
+    }],
 });
 
 groupSchema.methods.updateDependentsMembers = Promise.coroutine(function*() {
