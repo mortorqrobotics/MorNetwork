@@ -8,20 +8,14 @@ let Promise = require("bluebird");
 let coroutine = require("./coroutine");
 
 let normalGroupSchema = new Schema({
-    users: {
-        type: [{
-            type: ObjectId,
-            ref: "User"
-        }],
-        required: true
-    },
-    groups: {
-        type: [{
-            type: ObjectId,
-            ref: "Group"
-        }],
-        required: true
-    },
+    users: [{
+        type: ObjectId,
+        ref: "User"
+    }],
+    groups: [{
+        type: ObjectId,
+        ref: "Group"
+    }],
 });
 
 function removeDuplicates(arr) {
