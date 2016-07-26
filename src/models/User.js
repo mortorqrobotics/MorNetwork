@@ -74,8 +74,6 @@ var userSchema = new Schema({
 });
 
 userSchema.pre("save", function(next) {
-    if (this.isModified("current_team")) return next();
-
     let now = new Date();
     this.updated_at = now;
     if (!this.created_at) {
@@ -104,7 +102,7 @@ userSchema.pre("save", function(next) {
 userSchema.path("position").set(function(newPosition) {
     let user = this;
     user.oldPosition = user.position;
-    // TODO: does this have to set the new value?
+    return newPosition;
 });
 
 userSchema.pre("save", coroutine(function*(next) {
@@ -140,7 +138,7 @@ userSchema.pre("save", coroutine(function*(next) {
 userSchema.path("team").set(function(newTeam) {
     let user = this;
     user.oldTeam = user.team;
-    // TODO: set new value?
+    return newTeam;
 });
 
 
