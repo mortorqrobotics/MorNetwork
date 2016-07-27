@@ -101,38 +101,40 @@ userSchema.pre("save", function(next) {
 
 userSchema.path("position").set(function(newPosition) {
     let user = this;
-    user.oldPosition = user.position;
+    user.oldPosition = user.position || null;
     return newPosition;
 });
 
-userSchema.pre("save", coroutine(function*(next) {
+userSchema.post("save", Promise.coroutine(function*() {
     let user = this;
 
-    if (!user.isModified("position")) {
-        return next();
+    if (typeof user.oldPosition == "undefined") {
+        return;
     }
 
     if (user.oldPosition) {
         let group = yield PositionGroup.findOne({
             position: user.oldPosition,
-            team: user.team
+            team: user.team,
         });
         if (group) {
-            group.updateMembers();
+            yield group.updateMembers();
+            yield group.save();
         }
     }
 
     if (user.position) { // TODO: needs refactoring
         let group = yield PositionGroup.findOne({
             position: user.position,
-            team: user.team
+            team: user.team,
         });
         if (group) {
-            group.updateMembers();
+            yield group.updateMembers();
+            yield group.save();
+            // TODO: should updateMembers save automatically?
         }
     }
 
-    next();
 }));
 
 userSchema.path("team").set(function(newTeam) {
@@ -142,7 +144,7 @@ userSchema.path("team").set(function(newTeam) {
 });
 
 
-userSchema.post("save", coroutine(function*() {
+userSchema.post("save", Promise.coroutine(function*() {
     let user = this;
 
     if (typeof user.oldTeam == "undefined") {

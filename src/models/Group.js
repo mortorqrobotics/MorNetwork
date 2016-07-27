@@ -17,8 +17,11 @@ let groupSchema = new Schema({
 });
 
 groupSchema.methods.updateDependentsMembers = Promise.coroutine(function*() {
+    // TODO: this assumes dependentGroups is populated
+    // check if it is populated and if not do something else
     for (let dependent of this.dependentGroups) {
         yield dependent.updateMembers();
+        yield dependent.save();
     }
 });
 
@@ -31,6 +34,7 @@ groupSchema.pre("save", function(next) {
     // __t is not defined for generic groups
     // a generic group should never be created, so it should not be saved
     throw new Error("A generic group document should never be created.");
+    // I do not think this error will actually do anything though
 
 });
 
