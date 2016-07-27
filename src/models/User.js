@@ -58,7 +58,7 @@ var userSchema = new Schema({
     },
     position: {
         type: String,
-        enum: ["member", "leader", "mentor", "admin"]
+        enum: ["member", "leader", "mentor", "alumnus"]
     },
     scoutCaptain: {
         type: Boolean,

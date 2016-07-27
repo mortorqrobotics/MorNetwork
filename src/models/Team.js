@@ -2,9 +2,11 @@
 
 let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
+let Promise = require("bluebird");
 
 let coroutine = require("./coroutine");
 let AllTeamGroup = require("./AllTeamGroup");
+let PositionGroup = require("./PositionGroup");
 
 let teamSchema = new Schema({
     id: {
@@ -56,6 +58,15 @@ teamSchema.post("save", coroutine(function*() {
             members: [],
             dependentGroups: [],
         });
+        const positions = ["member", "leader", "mentor", "alumnus"];
+        yield Promise.all(positions.map(position => (
+            PositionGroup.create({
+                team: this._id,
+                position: position,
+                members: [],
+                dependentGroups: [],
+            })
+        )));
     } catch (err) {
         // TODO: deal with this
         console.log(err)
