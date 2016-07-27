@@ -16,6 +16,14 @@ let normalGroupSchema = new Schema({
         type: ObjectId,
         ref: "Group"
     }],
+    isPublic: {
+        type: Boolean,
+        required: true,
+    },
+    name: {
+        type: String,
+        required: true,
+    },
 });
 
 function removeDuplicates(arr) {
