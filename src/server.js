@@ -28,10 +28,7 @@ if (fs.existsSync(configPath)) {
     config = {
         "sessionSecret": "secret",
         "dbName": "MorNetwork",
-        "host": "test.dev"
-            // add the following line to /etc/hosts to make cookies work with subdomains
-            // localhost test.dev
-            // then navigate to www.test.dev:8080 in browser for testing
+        "host": "test.localhost"
     };
     fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
     console.log("Generated default config.json");
