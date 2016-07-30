@@ -52,6 +52,10 @@ if (process.env.NODE_ENV === "test") {
         use: () => {},
         on: () => {},
     };
+    app.use(function(req, res, next) {
+        req.headers["host"] = config.host;
+        next();
+    });
 } else {
     // start server
     let port = process.argv[2] || 8080;
