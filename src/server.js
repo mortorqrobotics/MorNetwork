@@ -34,7 +34,7 @@ if (fs.existsSync(configPath)) {
     console.log("Generated default config.json");
 }
 // create express application
-let app = express();
+let app = module.exports = express();
 
 // connect to mongodb server
 mongoose.connect("mongodb://localhost:27017/" + config.dbName);
@@ -46,10 +46,18 @@ let NormalGroup = require("./models/NormalGroup.js");
 let AllTeamGroup = require("./models/AllTeamGroup.js");
 let PositionGroup = require("./models/PositionGroup.js");
 
-// start server
-let port = process.argv[2] || 8080;
-let io = require("socket.io").listen(app.listen(port));
-console.log("server started on port %s", port);
+let io;
+if (process.env.NODE_ENV === "test") {
+    io = {
+        use: () => {},
+        on: () => {},
+    };
+} else {
+    // start server
+    let port = process.argv[2] || 8080;
+    io = require("socket.io").listen(app.listen(port));
+    console.log("server started on port %s", port);
+}
 
 // define imports for modules
 // this has to be a function so that each module has a different imports object
