@@ -21,19 +21,28 @@ function getPath(path) {
 }
 
 let config; // contains passwords and other sensitive info
-let configPath = getPath("../config.json");
-if (fs.existsSync(configPath)) {
-    config = require(configPath);
-} else {
-    config = {
+(() => {
+    let configPath = getPath("../config.json");
+    let defaultConfig = {
         "sessionSecret": "secret",
         "dbName": "MorNetwork",
         "testDbName": "MorNetworkTest",
         "host": "test.localhost",
     };
+    if (fs.existsSync(configPath)) {
+        config = require(configPath);
+        for (let key in defaultConfig) {
+            if (!(key in config)) {
+                config[key] = defaultConfig[key];
+            }
+        }
+    } else {
+        config = defaultConfig;
+        console.log("Generated default config.json");
+    }
     fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
-    console.log("Generated default config.json");
-}
+})()
+
 // create express application
 let app = module.exports = express();
 
