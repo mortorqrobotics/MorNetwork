@@ -28,7 +28,8 @@ if (fs.existsSync(configPath)) {
     config = {
         "sessionSecret": "secret",
         "dbName": "MorNetwork",
-        "host": "test.localhost"
+        "testDbName": "MorNetworkTest",
+        "host": "test.localhost",
     };
     fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
     console.log("Generated default config.json");
@@ -37,7 +38,12 @@ if (fs.existsSync(configPath)) {
 let app = module.exports = express();
 
 // connect to mongodb server
-mongoose.connect("mongodb://localhost:27017/" + config.dbName);
+let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
+mongoose.connect("mongodb://localhost:27017/" + dbName, function() {
+    if (process.env.NODE_ENV === "test") {
+        mongoose.connection.db.dropDatabase();
+    }
+});
 
 let User = require("./models/User.js");
 let Team = require("./models/Team.js");
@@ -76,9 +82,9 @@ function getImports() {
             Group: Group,
             NormalGroup: NormalGroup,
             AllTeamGroup: AllTeamGroup,
-            PositionGroup: PositionGroup
+            PositionGroup: PositionGroup,
         },
-        socketio: io
+        socketio: io,
     };
 };
 
