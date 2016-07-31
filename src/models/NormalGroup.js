@@ -85,7 +85,7 @@ normalGroupSchema.pre("save", coroutine(function*(next) {
     if (this.isModified("groups")) {
 
         for (let newGroupId of this.groups) {
-            if (this.oldGroups.indexOf(newGroupId) === -1) {
+            if (this.oldGroups && this.oldGroups.indexOf(newGroupId) === -1) {
                 yield Group.findOneAndUpdate({
                     _id: newGroupId
                 }, {
@@ -97,15 +97,17 @@ normalGroupSchema.pre("save", coroutine(function*(next) {
 
         }
 
-        for (let oldGroupId of this.oldGroups) {
-            if (this.groups.indexOf(oldGroupId) === -1) {
-                yield Group.findOneAndUpdate({
-                    _id: oldGroupId
-                }, {
-                    $pull: {
-                        dependentGroups: this._id
-                    }
-                });
+        if (this.oldGroups) {
+            for (let oldGroupId of this.oldGroups) {
+                if (this.groups.indexOf(oldGroupId) === -1) {
+                    yield Group.findOneAndUpdate({
+                        _id: oldGroupId
+                    }, {
+                        $pull: {
+                            dependentGroups: this._id
+                        }
+                    });
+                }
             }
         }
     }
