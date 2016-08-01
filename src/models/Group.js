@@ -8,25 +8,33 @@ let ObjectId = Schema.Types.ObjectId;
 let groupSchema = new Schema({
     members: [{
         type: ObjectId,
-        ref: "User"
+        ref: "User",
     }],
     dependentGroups: [{
         type: ObjectId,
-        ref: "Group" // TODO: should this be normalgroup?
+        ref: "NormalGroup",
     }],
 });
 
-groupSchema.methods.updateDependentsMembers = Promise.coroutine(function*() {
-    // TODO: this assumes dependentGroups is not populated
-    // check if it is populated and if not do something else
-    for (let dependentId of this.dependentGroups) {
-        let dependent = yield Group.findOne({
-            _id: dependentId
-        });
+/*
+   important info (idk where else to put it)
+   updateMembers() does not save the group automatically
+   so always call save() after updateMembers() if necessary
+   is it ok for updateMembers() to automatically call save()?
+   I am not sure, but if it is possible, it should be done
+*/
+
+groupSchema.methods.updateDependentsMembers = function() {
+    return Promise.all(this.dependentGroups.map(Promise.coroutine(function*(dependent) {
+        if (!dependent._id) {
+            dependent = yield Group.findOne({
+                _id: dependent
+            });
+        }
         yield dependent.updateMembers();
         yield dependent.save();
-    }
-});
+    })));
+};
 
 groupSchema.pre("save", function(next) {
 

@@ -26,6 +26,11 @@ let normalGroupSchema = new Schema({
     },
 });
 
+// TODO: make sure circular groups are never created!!!
+// if A depends on B and B depends on A it will be a bad time
+// also add checks to updateMembers in case circular groups are created for some reason
+// so that the whole thing does not die if there is a mistake
+
 function removeDuplicates(arr) {
     let seen = {};
     let result = [];
@@ -112,6 +117,7 @@ normalGroupSchema.path("groups").set(function(value) {
 });
 
 normalGroupSchema.pre("save", function(next) {
+    // for the post("save")
     this.wasGroupsModified = this.isModified("groups");
     this.wasUsersModified = this.isModified("users");
     next();

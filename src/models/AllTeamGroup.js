@@ -10,24 +10,20 @@ let allTeamGroupSchema = new Schema({
     team: {
         type: ObjectId,
         ref: "Team",
-        required: true
-    }
+        required: true,
+    },
 });
 
 allTeamGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
-    try {
 
-        // I tried importing User at the top
-        // but it is a circular dependency
-        this.members = (yield require("./User").find({
-            team: this.team
-        })).map(user => user._id);
+    // I tried importing User at the top
+    // but it is a circular dependency
+    this.members = (yield require("./User").find({
+        team: this.team
+    })).map(user => user._id);
 
-        yield this.updateDependentsMembers();
+    yield this.updateDependentsMembers();
 
-    } catch (err) {
-        console.error(err);
-    }
 });
 
 let AllTeamGroup = Group.discriminator("AllTeamGroup", allTeamGroupSchema);

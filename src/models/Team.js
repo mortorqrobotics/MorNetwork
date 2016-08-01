@@ -12,24 +12,24 @@ let teamSchema = new Schema({
     id: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     name: {
         type: String,
-        required: true
+        required: true,
     },
     number: {
         type: Number,
-        required: true
+        required: true,
     },
     currentRegional: {
         type: String,
-        required: false
+        required: false,
     },
     isPrivate: {
         type: Boolean,
         required: false,
-        default: false
+        default: false,
     },
     created_at: Date,
     updated_at: Date,
@@ -70,6 +70,7 @@ teamSchema.post("save", coroutine(function*() {
     } catch (err) {
         // TODO: deal with this
         console.log(err)
+        // this should all be in the pre("save") anyway so errors are handled normally
     }
 
 }));
