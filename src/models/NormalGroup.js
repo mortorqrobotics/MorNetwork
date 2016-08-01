@@ -40,25 +40,41 @@ function removeDuplicates(arr) {
 }
 
 normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
-    try {
 
-        // have to create a copy of the array instead of copying the reference
-        // otherwise the users property would be the same as members
-        let userIds = Array.prototype.slice.call(this.users);
+    // have to create a copy of the array instead of copying the reference
+    // otherwise the users property would be the same as members
+    let userIds = Array.prototype.slice.call(this.users);
 
-        for (let groupId of this.groups) {
-            let group = yield Group.findOne({
-                _id: groupId
-            });
-            Array.prototype.push.apply(userIds, group.members);
-        }
-        userIds = removeDuplicates(userIds);
-        this.members = userIds;
-
-        yield this.updateDependentsMembers();
-    } catch (err) {
-        console.error(err);
+    for (let groupId of this.groups) {
+        let group = yield Group.findOne({
+            _id: groupId
+        });
+        Array.prototype.push.apply(userIds, group.members);
     }
+    userIds = removeDuplicates(userIds);
+    this.members = userIds;
+
+    yield this.updateDependentsMembers();
+});
+
+normalGroupSchema.pre("update", function(next, done) {
+
+    /*
+       updating group members requires having the group object in memory
+       update just passes the query to mongodb
+       so the original group is never in memory
+       and middleware for updating group members cannot run
+       instead, use find and save for NormalGroups
+    */
+
+    if ("users" in this._compiledUpdate.$set ||
+        "groups" in this._compiledUpdate.$set ||
+        "$push" in this._compiledUpdate ||
+        "$pull" in this._compiledUpdate) {
+        throw new Error("do not use NormalGroup.update like that");
+    }
+
+    next();
 });
 
 normalGroupSchema.path("groups").get(function(value) {
