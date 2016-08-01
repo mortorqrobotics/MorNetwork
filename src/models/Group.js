@@ -17,9 +17,12 @@ let groupSchema = new Schema({
 });
 
 groupSchema.methods.updateDependentsMembers = Promise.coroutine(function*() {
-    // TODO: this assumes dependentGroups is populated
+    // TODO: this assumes dependentGroups is not populated
     // check if it is populated and if not do something else
-    for (let dependent of this.dependentGroups) {
+    for (let dependentId of this.dependentGroups) {
+        let dependent = yield Group.findOne({
+            _id: dependentId
+        });
         yield dependent.updateMembers();
         yield dependent.save();
     }

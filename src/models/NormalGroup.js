@@ -57,6 +57,21 @@ normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
     yield this.updateDependentsMembers();
 });
 
+normalGroupSchema.pre("save", coroutine(function*(next) {
+    if (this.isNew) {
+        let a = yield Group.update({
+            _id: {
+                $in: this.groups
+            }
+        }, {
+            $push: {
+                dependentGroups: this._id
+            }
+        });
+    }
+    next();
+}));
+
 normalGroupSchema.pre("update", function(next, done) {
 
     /*
@@ -96,9 +111,15 @@ normalGroupSchema.path("groups").set(function(value) {
     return value;
 });
 
-normalGroupSchema.pre("save", coroutine(function*(next) {
+normalGroupSchema.pre("save", function(next) {
+    this.wasGroupsModified = this.isModified("groups");
+    this.wasUsersModified = this.isModified("users");
+    next();
+});
 
-    if (this.isModified("groups")) {
+normalGroupSchema.post("save", Promise.coroutine(function*() {
+
+    if (this.wasGroupsModified) {
 
         for (let newGroupId of this.groups) {
             if (this.oldGroups && this.oldGroups.indexOf(newGroupId) === -1) {
@@ -131,11 +152,12 @@ normalGroupSchema.pre("save", coroutine(function*(next) {
     // isModified does check for deep equality
     // it will detect stuff like elements pushed to an array
     // instead of just comparing references
-    if (this.isModified("groups") || this.isModified("users")) {
+    if (this.wasGroupsModified || this.wasUsersModified) {
         yield this.updateMembers();
+        yield this.save();
     }
 
-    next();
+//    next();
 }));
 
 let NormalGroup = Group.discriminator("NormalGroup", normalGroupSchema);
