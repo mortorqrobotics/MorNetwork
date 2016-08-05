@@ -6,23 +6,11 @@ let Schema = mongoose.Schema;
 let ObjectId = Schema.Types.ObjectId;
 
 let groupSchema = new Schema({
-    members: [{
-        type: ObjectId,
-        ref: "User",
-    }],
     dependentGroups: [{
         type: ObjectId,
         ref: "NormalGroup",
     }],
 });
-
-/*
-   important info (idk where else to put it)
-   updateMembers() does not save the group automatically
-   so always call save() after updateMembers() if necessary
-   is it ok for updateMembers() to automatically call save()?
-   I am not sure, but if it is possible, it should be done
-*/
 
 groupSchema.methods.updateDependentsMembers = function() {
     return Promise.all(this.dependentGroups.map(Promise.coroutine(function*(dependent) {
@@ -32,7 +20,6 @@ groupSchema.methods.updateDependentsMembers = function() {
             });
         }
         yield dependent.updateMembers();
-        yield dependent.save();
     })));
 };
 

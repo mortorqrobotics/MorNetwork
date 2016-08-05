@@ -50,14 +50,19 @@ normalGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
     // otherwise the users property would be the same as members
     let userIds = Array.prototype.slice.call(this.users);
 
-    for (let groupId of this.groups) {
-        let group = yield Group.findOne({
-            _id: groupId
-        });
-        Array.prototype.push.apply(userIds, group.members);
+    let allUsers = yield require("./User").find();
+    for (let user of allUsers) {
+        let index = user.groups.indexOf(this._id);
+        let hasGroup = index != -1;
+        let needsGroup = this.users.indexOf(user._id) != -1 || user.groups.some(g => this.groups.indexOf(g) != -1);
+        if (!hasGroup && needsGroup) {
+            user.groups.push(this._id);
+            yield user.save();
+        } else if (hasGroup && !needsGroup) {
+            user.groups.splice(index, 1);
+            yield user.save();
+        }
     }
-    userIds = removeDuplicates(userIds);
-    this.members = userIds;
 
     yield this.updateDependentsMembers();
 });
@@ -160,7 +165,6 @@ normalGroupSchema.post("save", Promise.coroutine(function*() {
     // instead of just comparing references
     if (this.wasGroupsModified || this.wasUsersModified) {
         yield this.updateMembers();
-        yield this.save();
     }
 
 //    next();

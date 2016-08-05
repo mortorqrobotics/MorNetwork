@@ -55,7 +55,6 @@ teamSchema.post("save", coroutine(function*() {
     try {
         yield AllTeamGroup.create({
             team: this._id,
-            members: [],
             dependentGroups: [],
         });
         const positions = ["member", "leader", "mentor", "alumnus"];
@@ -63,7 +62,6 @@ teamSchema.post("save", coroutine(function*() {
             PositionGroup.create({
                 team: this._id,
                 position: position,
-                members: [],
                 dependentGroups: [],
             })
         )));

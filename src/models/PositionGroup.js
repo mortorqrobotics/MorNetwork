@@ -22,10 +22,20 @@ let positionGroupSchema = new Schema({
 positionGroupSchema.methods.updateMembers = Promise.coroutine(function*() {
 
     // require is here to prevent circular dependency
-    this.members = (yield require("./User").find({
-        team: this.team,
-        position: this.position,
-    })).map(user => user._id);
+    let allUsers = yield require("./User").find();
+    for (let user of allUsers) {
+        let index = user.groups.indexOf(this._id);
+        let hasGroup = index != -1;
+        let needsGroup = user.team && user.team.toString() == this.team.toString()
+            && user.position == this.position;
+        if (!hasGroup && needsGroup) {
+            user.groups.push(this._id);
+            yield user.save();
+        } else if (hasGroup && !needsGroup) {
+            user.groups.splice(index, 1);
+            yield user.save();
+        }
+    }
 
     yield this.updateDependentsMembers();
 

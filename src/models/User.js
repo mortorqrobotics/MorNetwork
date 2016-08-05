@@ -70,7 +70,11 @@ var userSchema = new Schema({
             ref: "Team"
         }],
         default: []
-    }
+    },
+    groups: [{
+        type: ObjectId,
+        ref: "Group",
+    }],
 });
 
 userSchema.pre("save", function(next) {
@@ -119,7 +123,6 @@ userSchema.post("save", Promise.coroutine(function*() {
         });
         if (group) {
             yield group.updateMembers();
-            yield group.save();
         }
     }
 
@@ -130,8 +133,6 @@ userSchema.post("save", Promise.coroutine(function*() {
         });
         if (group) {
             yield group.updateMembers();
-            yield group.save();
-            // TODO: should updateMembers save automatically?
         }
     }
 
@@ -142,7 +143,6 @@ userSchema.path("team").set(function(newTeam) {
     user.oldTeam = user.team || null;
     return newTeam;
 });
-
 
 userSchema.post("save", Promise.coroutine(function*() {
     let user = this;
@@ -166,7 +166,6 @@ userSchema.post("save", Promise.coroutine(function*() {
         });
         if (group) { // TODO: this should always evaluate to true
             yield group.updateMembers();
-            yield group.save();
         }
     }
 
