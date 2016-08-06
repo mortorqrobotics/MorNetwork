@@ -87,6 +87,15 @@ userSchema.pre("save", function(next) {
 });
 
 userSchema.pre("save", function(next) {
+    let capitalize = (str) => (
+        str[0].toUpperCase() + str.slice(1).toLowerCase()
+    );
+    this.firstname = capitalize(this.firstname);
+    this.lastname = capitalize(this.lastname);
+    next();
+});
+
+userSchema.pre("save", function(next) {
     let user = this;
 
     if (!user.isModified("password")) return next();
