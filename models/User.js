@@ -36,7 +36,7 @@ module.exports = function(mongoose) {
 		team: { type: ObjectId, ref: "Team" },
 		position: {
 			type: String,
-			enum: ["member", "leader", "mentor", "admin"]
+			enum: ["member", "leader", "mentor", "alumnus"]
 		},
 		scoutCaptain: { type: Boolean, default: false },
 		bannedFromTeams: { type: [{ type: ObjectId, ref: "Team" }], default: [] }
