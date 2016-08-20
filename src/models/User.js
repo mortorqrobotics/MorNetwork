@@ -148,30 +148,24 @@ userSchema.post("save", Promise.coroutine(function*() {
 }));
 
 userSchema.path("team").set(function(newTeam) {
-    let user = this;
-    user.oldTeam = user.team || null;
+    this.oldTeam = this.team || null;
     return newTeam;
 });
 
-userSchema.post("save", Promise.coroutine(function*() {
-    let user = this;
+userSchema.pre("save", coroutine(function*(next) {
 
-    if (typeof user.oldTeam == "undefined") {
-        return;
+    if (this.isModified("team") && typeof this.oldTeam !== "undefined") {
+        this.groups = [];
     }
 
-    if (user.oldTeam) {
-        let group = yield AllTeamGroup.findOne({
-            team: user.oldTeam
-        });
-        if (group) {
-            group.updateMembers();
-        }
-    }
+    next();
+}));
 
-    if (user.team) {
+userSchema.post("save", Promise.coroutine(function*(next) {
+
+    if (this.team) {
         let group = yield AllTeamGroup.findOne({
-            team: user.team
+            team: this.team
         });
         if (group) { // TODO: this should always evaluate to true
             yield group.updateMembers();
