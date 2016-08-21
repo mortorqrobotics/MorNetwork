@@ -28,6 +28,7 @@ let config; // contains passwords and other sensitive info
         "dbName": "MorNetwork",
         "testDbName": "MorNetworkTest",
         "host": "test.localhost",
+        "cookieDomain": "",
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -115,7 +116,7 @@ let sessionMiddleware = session({
     saveUninitialized: false,
     resave: false,
     cookie: {
-        domain: "." + config.host
+        domain: "." + (config.cookieDomain || config.host),
     },
     store: new MongoStore({
         mongooseConnection: mongoose.connection
