@@ -7,6 +7,8 @@ let ObjectId = Schema.Types.ObjectId;
 let Promise = require("bluebird");
 let PositionGroup = require("./PositionGroup");
 let AllTeamGroup = require("./AllTeamGroup");
+let NormalGroup = require("./NormalGroup");
+let Team = require("./Team");
 let coroutine = require("./coroutine");
 let SALT_WORK_FACTOR = 10;
 
@@ -45,7 +47,7 @@ var userSchema = new Schema({
     },
     parentEmail: String,
     phone: {
-        type: Number,
+        type: String, // changed from Number
         required: true,
         unique: true
     },
@@ -74,6 +76,7 @@ var userSchema = new Schema({
     groups: [{
         type: ObjectId,
         ref: "Group",
+        required: true,
     }],
 });
 
@@ -112,68 +115,6 @@ userSchema.pre("save", function(next) {
     });
 });
 
-userSchema.path("position").set(function(newPosition) {
-    let user = this;
-    user.oldPosition = user.position || null;
-    return newPosition;
-});
-
-userSchema.post("save", Promise.coroutine(function*() {
-    let user = this;
-
-    if (typeof user.oldPosition == "undefined") {
-        return;
-    }
-
-    if (user.oldPosition) {
-        let group = yield PositionGroup.findOne({
-            position: user.oldPosition,
-            team: user.team,
-        });
-        if (group) {
-            yield group.updateMembers();
-        }
-    }
-
-    if (user.position) { // TODO: needs refactoring
-        let group = yield PositionGroup.findOne({
-            position: user.position,
-            team: user.team,
-        });
-        if (group) {
-            yield group.updateMembers();
-        }
-    }
-
-}));
-
-userSchema.path("team").set(function(newTeam) {
-    this.oldTeam = this.team || null;
-    return newTeam;
-});
-
-userSchema.pre("save", coroutine(function*(next) {
-
-    if (this.isModified("team") && typeof this.oldTeam !== "undefined") {
-        this.groups = [];
-    }
-
-    next();
-}));
-
-userSchema.post("save", Promise.coroutine(function*(next) {
-
-    if (this.team) {
-        let group = yield AllTeamGroup.findOne({
-            team: this.team
-        });
-        if (group) { // TODO: this should always evaluate to true
-            yield group.updateMembers();
-        }
-    }
-
-}));
-
 userSchema.methods.comparePassword = function(candidatePassword) {
     let password = this.password;
     return new Promise(function(resolve, reject) { // antipattern but whatever
@@ -193,6 +134,65 @@ userSchema.methods.assignNewPassword = function() {
     user.password = newPassword;
     return Promise.resolve(newPassword);
 };
+
+userSchema.statics.addToTeam = Promise.coroutine(function*(userId, teamId, position, scoutCaptain) {
+    let groups = [
+        (yield AllTeamGroup.findOne({
+            team: teamId,
+        }))._id,
+        (yield PositionGroup.findOne({
+            team: teamId,
+            position: position,
+        }))._id,
+    ];
+    yield User.update({
+        _id: userId,
+    }, {
+        $set: {
+            team: teamId,
+            position: position,
+            scoutCaptain: scoutCaptain,
+        },
+        $pushAll: {
+            groups: groups,
+        }
+    });
+});
+
+userSchema.statics.removeFromTeam = Promise.coroutine(function*(user) {
+    yield NormalGroup.update({
+        _id: {
+            $in: user.groups,
+        },
+    }, {
+        $pull: {
+            users: user._id,
+        },
+    }, {
+        multi: true,
+    });
+    user.groups = [];
+    user.team = undefined;
+    user.position = undefined;
+    user.scoutCaptain = undefined;
+    yield user.save();
+});
+
+userSchema.statics.setPosition = Promise.coroutine(function*(user, newPosition) {
+    let oldPosition = user.position;
+    user.position = newPosition;
+    let oldPositionGroup = yield PositionGroup.findOne({
+        team: user.team,
+        position: oldPosition,
+    });
+    let newPositionGroup = yield PositionGroup.findOne({
+        team: user.team,
+        position: newPosition,
+    });
+    user.groups.splice(user.groups.map(g => g.toString()).indexOf(oldPositionGroup._id.toString()), 1);
+    user.groups.push(newPositionGroup._id);
+    yield user.save();
+});
 
 let User = mongoose.model("User", userSchema);
 

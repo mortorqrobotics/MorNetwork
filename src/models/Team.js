@@ -26,7 +26,7 @@ let teamSchema = new Schema({
         type: String,
         required: false,
     },
-    isPrivate: {
+    isPrivate: { // for morscout
         type: Boolean,
         required: false,
         default: false,
@@ -47,32 +47,23 @@ teamSchema.pre("save", function(next) {
     next();
 });
 
-teamSchema.post("save", coroutine(function*() {
-    if (!this.wasNew) {
-        return;
-    }
-
-    try {
-        yield AllTeamGroup.create({
-            team: this._id,
-            dependentGroups: [],
+teamSchema.statics.createTeam = Promise.coroutine(function*(obj) {
+    let team = yield teamCreate(obj);
+    yield AllTeamGroup.create({
+        team: team._id,
+    });
+    for (let position of PositionGroup.allPositions) {
+        yield PositionGroup.create({
+            team: team._id,
+            position: position,
         });
-        const positions = ["member", "leader", "mentor", "alumnus"];
-        yield Promise.all(positions.map(position => (
-            PositionGroup.create({
-                team: this._id,
-                position: position,
-                dependentGroups: [],
-            })
-        )));
-    } catch (err) {
-        // TODO: deal with this
-        console.log(err)
-        // this should all be in the pre("save") anyway so errors are handled normally
     }
-
-}));
+    return team;
+});
 
 let Team = mongoose.model("Team", teamSchema);
+
+let teamCreate = Team.create.bind(Team);
+delete Team.create;
 
 module.exports = Team;

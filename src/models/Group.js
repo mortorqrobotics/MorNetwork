@@ -5,23 +5,7 @@ let Promise = require("bluebird");
 let Schema = mongoose.Schema;
 let ObjectId = Schema.Types.ObjectId;
 
-let groupSchema = new Schema({
-    dependentGroups: [{
-        type: ObjectId,
-        ref: "NormalGroup",
-    }],
-});
-
-groupSchema.methods.updateDependentsMembers = function() {
-    return Promise.all(this.dependentGroups.map(Promise.coroutine(function*(dependent) {
-        if (!dependent._id) {
-            dependent = yield Group.findOne({
-                _id: dependent
-            });
-        }
-        yield dependent.updateMembers();
-    })));
-};
+let groupSchema = new Schema({});
 
 groupSchema.pre("save", function(next) {
 
