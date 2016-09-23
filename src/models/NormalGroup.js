@@ -48,7 +48,9 @@ normalGroupSchema.statics.addUsers = Promise.coroutine(function*(groupId, users)
         _id: groupId,
     }, {
         $addToSet: {
-            users: users,
+            users: {
+                $each: users,
+            },
         },
     });
     yield require("./User").update({
@@ -69,7 +71,9 @@ normalGroupSchema.statics.removeUsers = Promise.coroutine(function*(groupId, use
         _id: groupId,
     }, {
         $pull: {
-            users: users,
+            users: {
+                $in: users,
+            },
         },
     });
     yield require("./User").update({
