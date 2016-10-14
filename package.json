@@ -2,16 +2,15 @@
   "name": "MorNetwork",
   "version": "1.0.0",
   "description": "Main server for MorTorq web applications",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-      "fmt": "for f in `find src -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done",
-      "start": "node src/server",
-      "updateall": "git checkout mormap; git pull origin mormap; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git checkout mormap; git pull origin mormap; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull origin master; npm install; npm run build"
+    "updateall": "git checkout mormap; git pull origin mormap; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git checkout mormap; git pull origin mormap; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull origin master; npm install; npm run build"
   },
   "dependencies": {
     "bcrypt": "^0.8.5",
     "bluebird": "^3.3.5",
     "body-parser": "^1.14.0",
+    "compression": "^1.6.2",
     "connect-mongo": "^0.8.2",
     "ejs": "^2.3.4",
     "express": "^4.13.3",
@@ -32,8 +31,5 @@
   "bugs": {
     "url": "https://github.com/mortorqrobotics/MorNetwork/issues"
   },
-  "homepage": "https://github.com/mortorqrobotics/MorNetwork",
-  "devDependencies": {
-    "js-beautify": "^1.6.3"
-  }
+  "homepage": "https://github.com/mortorqrobotics/MorNetwork"
 }

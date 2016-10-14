@@ -12,6 +12,7 @@ let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let multer = require("multer"); // for file uploads
 let vh = require("express-vhost");
+let compression = require("compression");
 
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
@@ -109,6 +110,12 @@ app.use(function(err, req, res, next) {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
+}));
+
+app.use(compression({
+    filter: (req, res) => (
+        req.path.startsWith("/api") || req.path.startsWith("/js")
+    ),
 }));
 
 let sessionMiddleware = session({
