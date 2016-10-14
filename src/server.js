@@ -30,6 +30,7 @@ let config; // contains passwords and other sensitive info
         "testDbName": "MorNetworkTest",
         "host": "test.localhost",
         "cookieDomain": "",
+        "defaultPort": 8080,
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -75,7 +76,7 @@ if (process.env.NODE_ENV === "test") {
     });
 } else {
     // start server
-    let port = process.argv[2] || 8080;
+    let port = process.argv[2] || config.defaultPort;
     io = require("socket.io").listen(app.listen(port));
     console.log("server started on port %s", port);
 }
