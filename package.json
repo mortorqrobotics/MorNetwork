@@ -4,7 +4,7 @@
   "description": "Main server for MorTorq web applications",
   "main": "server.js",
   "scripts": {
-    "updateall": "git checkout mormap; git pull origin mormap; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git checkout mormap; git pull origin mormap; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull origin master; npm install; npm run build"
+    "updateall": "git pull; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git pull; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull; npm install; npm run build"
   },
   "dependencies": {
     "bcrypt": "^0.8.5",
