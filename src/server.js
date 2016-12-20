@@ -162,13 +162,17 @@ app.use(Promise.coroutine(function*(req, res, next) {
 }));
 
 
-let morteam = require(getPath("../../morteam-server-website/server/server.js"))(getImports());
+let morteamPath = getPath("../../morteam-server-website/server/server.js");
+let morteam = require(morteamPath)(getImports());
 vh.register(config.host, morteam);
 vh.register("www." + config.host, morteam);
 
-//let morscout = require("../morscout-server/server.js")(getImports());
-//vh.register("scout." + config.host, morscout);
-//vh.register("www.scout." + config.host, morscout);
+let morscoutPath = getPath("../../morscout-server/server.js");
+if (fs.existsSync(morscoutPath)) {
+    let morscout = require(morscoutPath)(getImports());
+    vh.register("scout." + config.host, morscout);
+    vh.register("www.scout." + config.host, morscout);
+}
 
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
