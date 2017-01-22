@@ -24,7 +24,7 @@ let teamSchema = new Schema({
     },
     profPicPath: {
         type: String,
-        default: "/images/questionMark.png",
+        default: null,
     },
     currentRegional: {
         type: String,
