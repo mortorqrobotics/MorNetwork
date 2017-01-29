@@ -78,6 +78,13 @@ var userSchema = new Schema({
         ref: "Group",
         required: true,
     }],
+    mobileDeviceTokens: {
+        type: [{
+            type: String,
+            required: true,
+        }],
+        default: [],
+    }
 });
 
 userSchema.pre("save", function(next) {
