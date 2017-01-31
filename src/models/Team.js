@@ -22,6 +22,10 @@ let teamSchema = new Schema({
         type: Number,
         required: true,
     },
+    profPicPath: {
+        type: String,
+        default: null,
+    },
     currentRegional: {
         type: String,
         required: false,
