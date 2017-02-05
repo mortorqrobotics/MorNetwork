@@ -63,6 +63,7 @@ let Group = require("./models/Group.js");
 let NormalGroup = require("./models/NormalGroup.js");
 let AllTeamGroup = require("./models/AllTeamGroup.js");
 let PositionGroup = require("./models/PositionGroup.js");
+let coroutine = require("./models/coroutine.js");
 
 let io;
 if (process.env.NODE_ENV === "test") {
@@ -95,6 +96,7 @@ function getImports() {
             NormalGroup: NormalGroup,
             AllTeamGroup: AllTeamGroup,
             PositionGroup: PositionGroup,
+            coroutine: coroutine,
         },
         socketio: io,
     };
