@@ -10,7 +10,6 @@ let mongoose = require("mongoose"); // MongoDB ODM
 let session = require("express-session");
 let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
-let multer = require("multer"); // for file uploads
 let vh = require("express-vhost");
 let compression = require("compression");
 
