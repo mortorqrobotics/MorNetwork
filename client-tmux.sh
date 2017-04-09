@@ -5,7 +5,7 @@ case $response in
 	[mM][oO][rR][tT][eE][aA][mM]|[tT])
 		project="morteam"
 		;;
-	[mM][oO][rR][sS][cS][oO][uU][tT]|[sS])
+	[mM][oO][rR][sS][cC][oO][uU][tT]|[sS])
 		project="morscout"
 		;;
 	*)
