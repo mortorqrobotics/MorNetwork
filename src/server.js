@@ -175,7 +175,7 @@ if (fs.existsSync(morscoutPath)) {
     vh.register("www.scout." + config.host, morscout);
 }
 
-let morpartsPath = getPath("../../morparts/server/server.js");
+let morpartsPath = getPath("../../morparts-server-website/server/server.js");
 if (fs.existsSync(morpartsPath)) {
     let morparts = require(morpartsPath)(getImports());
     vh.register("parts." + config.host, morparts);
