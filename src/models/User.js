@@ -1,7 +1,7 @@
 "use strict";
 
 let mongoose = require("mongoose");
-let bcrypt = require("bcrypt");
+let bcrypt = require("bcryptjs");
 let Schema = mongoose.Schema;
 let ObjectId = Schema.Types.ObjectId;
 let Promise = require("bluebird");
