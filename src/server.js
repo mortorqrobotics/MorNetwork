@@ -13,9 +13,6 @@ let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to Mongo
 let vh = require("express-vhost");
 let compression = require("compression");
 let path = require("path");
-var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
-var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
-var credentials = { key: privateKey, cert: certificate };
 let https = require("https");
 
 let Promise = require("bluebird");
@@ -186,7 +183,12 @@ if (fs.existsSync(morscoutPath)) {
 
 app.use(vh.vhost(app.enabled("trust proxy")));
 
-let sserver = https.createServer(credentials, app);
-sserver.listen(config.defaultPortS);
+if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
+    var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
+    var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
+    var credentials = { key: privateKey, cert: certificate };
+    let sserver = https.createServer(credentials, app);
+    sserver.listen(config.defaultPortS);
+}
 // 404 handled by each application
 // TODO: still put a 404 handler here though?
