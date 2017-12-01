@@ -12,12 +12,17 @@ let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let vh = require("express-vhost");
 let compression = require("compression");
+let path = require("path");
+var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
+var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
+var credentials = { key: privateKey, cert: certificate };
+let https = require("https");
 
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
 
-function getPath(path) {
-    return require("path").join(__dirname, path);
+function getPath(p) {
+    return path.join(__dirname, p);
 }
 
 let config; // contains passwords and other sensitive info
@@ -30,6 +35,7 @@ let config; // contains passwords and other sensitive info
         "host": "test.localhost",
         "cookieDomain": "",
         "defaultPort": 8080,
+        "defaultPortS": 8433,
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -50,7 +56,7 @@ let app = module.exports = express();
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://localhost:27017/" + dbName, function() {
+mongoose.connect("mongodb://localhost:27017/" + dbName, function () {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
@@ -67,10 +73,10 @@ let coroutine = require("./models/coroutine.js");
 let io;
 if (process.env.NODE_ENV === "test") {
     io = {
-        use: () => {},
-        on: () => {},
+        use: () => { },
+        on: () => { },
     };
-    app.use(function(req, res, next) {
+    app.use(function (req, res, next) {
         req.headers["host"] = config.host;
         next();
     });
@@ -103,7 +109,7 @@ function getImports() {
 
 // check for any errors in all requests
 // TODO: does this actually do anything?
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.status(500).send("Oops, something went wrong!");
 });
@@ -133,14 +139,14 @@ let sessionMiddleware = session({
 });
 
 // can now use session info (cookies) with socket.io requests
-io.use(function(socket, next) {
+io.use(function (socket, next) {
     sessionMiddleware(socket.request, socket.request.res, next);
 });
 // can now use session info (cookies) with regular requests
 app.use(sessionMiddleware);
 
 // load user info from session cookie into req.user object for each request
-app.use(Promise.coroutine(function*(req, res, next) {
+app.use(Promise.coroutine(function* (req, res, next) {
     if (req.session && req.session.userId) {
         try {
 
@@ -174,12 +180,13 @@ if (fs.existsSync(morscoutPath)) {
     vh.register("scout." + config.host, morscout);
     vh.register("www.scout." + config.host, morscout);
 }
-
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
 //vh.register("www.test." + config.host, testModule);
 
 app.use(vh.vhost(app.enabled("trust proxy")));
 
+let sserver = https.createServer(credentials, app);
+sserver.listen(config.defaultPortS);
 // 404 handled by each application
 // TODO: still put a 404 handler here though?
