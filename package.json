@@ -5,7 +5,6 @@
   "main": "server.js",
   "scripts": {
     "updateall": "git pull; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git pull; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull; npm install; npm run build",
-    "update:deps": "npm-check --no-emojies -u",
     "ssl": "sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ssl/apache.key -out ssl/apache.crt"
   },
   "dependencies": {
