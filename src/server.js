@@ -83,10 +83,18 @@ let server = net.createServer(socket => {
 });
 
 server.http = http.createServer(app);
-var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
-var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
-var credentials = { key: privateKey, cert: certificate };
-server.https = https.createServer(credentials, app);
+if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
+    var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
+    var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
+    var credentials = { key: privateKey, cert: certificate };
+    server.https = https.createServer(credentials, app);
+} else {
+    var red = express();
+    var privateKey = fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')).toString();
+    var certificate = fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')).toString();
+    red.use(function (req, res) { res.redirect('http://' + req.headers.host + req.url);})
+    server.https = https.createServer({ key: privateKey, cert: certificate }, red);
+}
 server.listen(config.defaultPort);
 
 // connect to mongodb server
@@ -221,13 +229,6 @@ if (fs.existsSync(morscoutPath)) {
 
 app.use(vh.vhost(app.enabled("trust proxy")));
 
-if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
-    var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
-    var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
-    var credentials = { key: privateKey, cert: certificate };
-    let sserver = https.createServer(credentials, app);
-    sserver.listen(config.defaultPortS);
-}
 
 // 404 handled by each application
 // TODO: still put a 404 handler here though?
