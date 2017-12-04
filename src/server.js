@@ -4,6 +4,8 @@
 
 let express = require("express");
 let http = require("http");
+let net = require('net');
+let https = require('https');
 let fs = require("fs");
 let bodyParser = require("body-parser");
 let mongoose = require("mongoose"); // MongoDB ODM
@@ -13,7 +15,7 @@ let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to Mongo
 let vh = require("express-vhost");
 let compression = require("compression");
 let path = require("path");
-let https = require("https");
+
 
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
@@ -32,7 +34,6 @@ let config; // contains passwords and other sensitive info
         "host": "test.localhost",
         "cookieDomain": "",
         "defaultPort": 8080,
-        "defaultPortS": 8433,
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -50,6 +51,43 @@ let config; // contains passwords and other sensitive info
 
 // create express application
 let app = module.exports = express();
+
+// code to put http and https on same port
+let server = net.createServer(socket => {
+    socket.once('data', buffer => {
+        // Pause the socket
+        socket.pause();
+
+        // Determine if this is an HTTP(s) request
+        let byte = buffer[0];
+
+        let protocol;
+        if (byte === 22) {
+            protocol = 'https';
+        } else if (32 < byte && byte < 127) {
+            protocol = 'http';
+        }
+
+        let proxy = server[protocol];
+        if (proxy) {
+            // Push the buffer back onto the front of the data stream
+            socket.unshift(buffer);
+
+            // Emit the socket to the HTTP(s) server
+            proxy.emit('connection', socket);
+        }
+
+        // Resume the socket data stream
+        socket.resume();
+    });
+});
+
+server.http = http.createServer(app);
+var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
+var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
+var credentials = { key: privateKey, cert: certificate };
+server.https = https.createServer(credentials, app);
+server.listen(config.defaultPort);
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
@@ -80,7 +118,7 @@ if (process.env.NODE_ENV === "test") {
 } else {
     // start server
     let port = process.argv[2] || config.defaultPort;
-    io = require("socket.io").listen(app.listen(port));
+    io = require("socket.io").listen(server.http).listen(server.https);
     console.log("server started on port %s", port);
 }
 
@@ -190,5 +228,6 @@ if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsS
     let sserver = https.createServer(credentials, app);
     sserver.listen(config.defaultPortS);
 }
+
 // 404 handled by each application
 // TODO: still put a 404 handler here though?
