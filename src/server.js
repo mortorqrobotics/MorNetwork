@@ -4,6 +4,8 @@
 
 let express = require("express");
 let http = require("http");
+let net = require('net');
+let https = require('https');
 let fs = require("fs");
 let bodyParser = require("body-parser");
 let mongoose = require("mongoose"); // MongoDB ODM
@@ -12,12 +14,14 @@ let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let vh = require("express-vhost");
 let compression = require("compression");
+let path = require("path");
+
 
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
 
-function getPath(path) {
-    return require("path").join(__dirname, path);
+function getPath(p) {
+    return path.join(__dirname, p);
 }
 
 let config; // contains passwords and other sensitive info
@@ -48,9 +52,54 @@ let config; // contains passwords and other sensitive info
 // create express application
 let app = module.exports = express();
 
+// code to put http and https on same port
+let server = net.createServer(socket => {
+    socket.once('data', buffer => {
+        // Pause the socket
+        socket.pause();
+
+        // Determine if this is an HTTP(s) request
+        let byte = buffer[0];
+
+        let protocol;
+        if (byte === 22) {
+            protocol = 'https';
+        } else if (32 < byte && byte < 127) {
+            protocol = 'http';
+        }
+
+        let proxy = server[protocol];
+        if (proxy) {
+            // Push the buffer back onto the front of the data stream
+            socket.unshift(buffer);
+
+            // Emit the socket to the HTTP(s) server
+            proxy.emit('connection', socket);
+        }
+
+        // Resume the socket data stream
+        socket.resume();
+    });
+});
+
+server.http = http.createServer(app);
+if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
+    var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
+    var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
+    var credentials = { key: privateKey, cert: certificate };
+    server.https = https.createServer(credentials, app);
+} else {
+    var red = express();
+    var privateKey = fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')).toString();
+    var certificate = fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')).toString();
+    red.use(function (req, res) { res.redirect('http://' + req.headers.host + req.url);})
+    server.https = https.createServer({ key: privateKey, cert: certificate }, red);
+}
+server.listen(config.defaultPort);
+
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://localhost:27017/" + dbName, function() {
+mongoose.connect("mongodb://localhost:27017/" + dbName, function () {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
@@ -67,17 +116,17 @@ let coroutine = require("./models/coroutine.js");
 let io;
 if (process.env.NODE_ENV === "test") {
     io = {
-        use: () => {},
-        on: () => {},
+        use: () => { },
+        on: () => { },
     };
-    app.use(function(req, res, next) {
+    app.use(function (req, res, next) {
         req.headers["host"] = config.host;
         next();
     });
 } else {
     // start server
     let port = process.argv[2] || config.defaultPort;
-    io = require("socket.io").listen(app.listen(port));
+    io = require("socket.io").listen(server.http).listen(server.https);
     console.log("server started on port %s", port);
 }
 
@@ -103,7 +152,7 @@ function getImports() {
 
 // check for any errors in all requests
 // TODO: does this actually do anything?
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.status(500).send("Oops, something went wrong!");
 });
@@ -133,14 +182,14 @@ let sessionMiddleware = session({
 });
 
 // can now use session info (cookies) with socket.io requests
-io.use(function(socket, next) {
+io.use(function (socket, next) {
     sessionMiddleware(socket.request, socket.request.res, next);
 });
 // can now use session info (cookies) with regular requests
 app.use(sessionMiddleware);
 
 // load user info from session cookie into req.user object for each request
-app.use(Promise.coroutine(function*(req, res, next) {
+app.use(Promise.coroutine(function* (req, res, next) {
     if (req.session && req.session.userId) {
         try {
 
@@ -174,12 +223,12 @@ if (fs.existsSync(morscoutPath)) {
     vh.register("scout." + config.host, morscout);
     vh.register("www.scout." + config.host, morscout);
 }
-
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
 //vh.register("www.test." + config.host, testModule);
 
 app.use(vh.vhost(app.enabled("trust proxy")));
+
 
 // 404 handled by each application
 // TODO: still put a 404 handler here though?
