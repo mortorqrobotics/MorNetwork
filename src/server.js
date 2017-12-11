@@ -34,6 +34,7 @@ let config; // contains passwords and other sensitive info
         "host": "test.localhost",
         "cookieDomain": "",
         "defaultPort": 8080,
+        "defaultPortS": 8080,
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -51,51 +52,76 @@ let config; // contains passwords and other sensitive info
 
 // create express application
 let app = module.exports = express();
-
-// code to put http and https on same port
-let server = net.createServer(socket => {
-    socket.once('data', buffer => {
-        // Pause the socket
-        socket.pause();
-
-        // Determine if this is an HTTP(s) request
-        let byte = buffer[0];
-
-        let protocol;
-        if (byte === 22) {
-            protocol = 'https';
-        } else if (32 < byte && byte < 127) {
-            protocol = 'http';
-        }
-
-        let proxy = server[protocol];
-        if (proxy) {
-            // Push the buffer back onto the front of the data stream
-            socket.unshift(buffer);
-
-            // Emit the socket to the HTTP(s) server
-            proxy.emit('connection', socket);
-        }
-
-        // Resume the socket data stream
-        socket.resume();
-    });
-});
-
-server.http = http.createServer(app);
-if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
-    var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
-    var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
-    var credentials = { key: privateKey, cert: certificate };
-    server.https = https.createServer(credentials, app);
+let server, serverS;
+let port = process.argv[2] || config.defaultPort;
+let portS = process.argv[3] || config.defaultPortS;
+if (config.defaultPortS == void 0) {
+    server = http.createServer(app);
+    server.listen(port);
 } else {
-    var red = express();
-    var privateKey = fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')).toString();
-    var certificate = fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')).toString();
-    red.use(function (req, res) { res.redirect('http://' + req.headers.host + req.url);})
-    server.https = https.createServer({ key: privateKey, cert: certificate }, red);
+    if (config.defaultPortS === config.defaultPort) {
+        // code to put http and https on same port
+        server = net.createServer(socket => {
+            socket.once('data', buffer => {
+                // Pause the socket
+                socket.pause();
+
+                // Determine if this is an HTTP(s) request
+                let byte = buffer[0];
+
+                let protocol;
+                if (byte === 22) {
+                    protocol = 'https';
+                } else if (32 < byte && byte < 127) {
+                    protocol = 'http';
+                }
+
+                let proxy = server[protocol];
+                if (proxy) {
+                    // Push the buffer back onto the front of the data stream
+                    socket.unshift(buffer);
+
+                    // Emit the socket to the HTTP(s) server
+                    proxy.emit('connection', socket);
+                }
+
+                // Resume the socket data stream
+                socket.resume();
+            });
+        });
+        server.http = http.createServer(app);
+        if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
+            var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
+            var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
+            var credentials = { key: privateKey, cert: certificate };
+            server.https = https.createServer(credentials, app);
+        } else {
+            var red = express();
+            var privateKey = fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')).toString();
+            var certificate = fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')).toString();
+            red.use(function (req, res) { res.redirect('http://' + req.headers.host + req.url); })
+            server.https = https.createServer({ key: privateKey, cert: certificate }, red);
+        }
+        server.listen(port);
+    } else {
+        //code for different 
+        server = http.createServer(app);
+        server.listen(config.defaultPort);
+        if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
+            var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
+            var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
+            var credentials = { key: privateKey, cert: certificate };
+            serverS = https.createServer(credentials, app);
+        } else {
+            var red = express();
+            var privateKey = fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')).toString();
+            var certificate = fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')).toString();
+            red.use(function (req, res) { res.redirect('http://' + req.headers.host + req.url); })
+            serverS = https.createServer({ key: privateKey, cert: certificate }, red);
+        }
+        serverS.listen(portS);
+    }
 }
-server.listen(config.defaultPort);
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
@@ -126,8 +152,17 @@ if (process.env.NODE_ENV === "test") {
 } else {
     // start server
     let port = process.argv[2] || config.defaultPort;
-    io = require("socket.io").listen(server.http).listen(server.https);
-    console.log("server started on port %s", port);
+    if (config.defaultPortS == void 0){
+        io = require("socket.io").listen(server);
+        console.log("server started on port %s", port);
+    }else if (config.defaultPort===config.defaultPortS){
+        io = require("socket.io").listen(server.http).listen(server.https);
+        console.log("server started on port %s", port);
+    }else{
+        io = require("socket.io").listen(server).listen(serverS);
+        console.log("server started on port %s", port, " & ", config.defaultPortS);
+    }
+    
 }
 
 // define imports for modules
