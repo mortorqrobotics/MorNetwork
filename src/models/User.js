@@ -160,8 +160,8 @@ userSchema.statics.addToTeam = Promise.coroutine(function*(userId, teamId, posit
             position: position,
             scoutCaptain: scoutCaptain,
         },
-        $pushAll: {
-            groups: groups,
+        $push: {
+            groups: { $each: groups },
         }
     });
 });
