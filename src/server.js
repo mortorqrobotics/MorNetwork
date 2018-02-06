@@ -100,7 +100,9 @@ if (process.env.NODE_ENV === "test") {
     // start server
     let port = process.argv[2] || (hasHttps ? config.defaultPortSecure : config.defaultPort);
     http.listen(config.defaultPort);
-    https.listen(config.defaultPortSecure);
+    if (hasHttps) {
+        https.listen(config.defaultPortSecure);
+    }
     io = require("socket.io").listen(hasHttps ? https : http);
     console.log("server started on port %s", port);
 }
