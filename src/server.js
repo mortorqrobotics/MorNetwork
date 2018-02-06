@@ -34,6 +34,7 @@ let config; // contains passwords and other sensitive info
         "host": "test.localhost",
         "cookieDomain": "",
         "defaultPort": 8080,
+        "defaultPortSecure": 443,
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -52,54 +53,32 @@ let config; // contains passwords and other sensitive info
 // create express application
 let app = module.exports = express();
 
-// code to put http and https on same port
-let server = net.createServer(socket => {
-    socket.once('data', buffer => {
-        // Pause the socket
-        socket.pause();
+http = http.createServer(app);
 
-        // Determine if this is an HTTP(s) request
-        let byte = buffer[0];
+let keyPath = getPath("../ssl/privkey.pem");
+let certPath = getPath("../ssl/fullchain.pem");
+let caPath = getPath("../ssl/chain.pem");
 
-        let protocol;
-        if (byte === 22) {
-            protocol = 'https';
-        } else if (32 < byte && byte < 127) {
-            protocol = 'http';
-        }
+let hasHttps = fs.existsSync(keyPath) && fs.existsSync(certPath) && fs.existsSync(caPath);
 
-        let proxy = server[protocol];
-        if (proxy) {
-            // Push the buffer back onto the front of the data stream
-            socket.unshift(buffer);
+if (hasHttps) {
+    let credentials = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
+        ca: fs.readFileSync(caPath),
+    };
+    https = https.createServer(credentials, app);
 
-            // Emit the socket to the HTTP(s) server
-            proxy.emit('connection', socket);
-        }
+    // redirect http to https
+    http.get('*', function(req, res) {
+        res.redirect('https://' + req.headers.host + req.url);
 
-        // Resume the socket data stream
-        socket.resume();
-    });
-});
-
-server.http = http.createServer(app);
-if (fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.key')) && fs.existsSync(path.join(__dirname, '..', 'ssl', 'server.crt'))) {
-    var privateKey = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.key')).toString();
-    var certificate = fs.readFileSync(path.join(__dirname, '..', 'ssl', 'server.crt')).toString();
-    var credentials = { key: privateKey, cert: certificate };
-    server.https = https.createServer(credentials, app);
-} else {
-    var red = express();
-    var privateKey = fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')).toString();
-    var certificate = fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')).toString();
-    red.use(function (req, res) { res.redirect('http://' + req.headers.host + req.url);})
-    server.https = https.createServer({ key: privateKey, cert: certificate }, red);
+    })
 }
-server.listen(config.defaultPort);
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://localhost:27017/" + dbName, function () {
+mongoose.connect("mongodb://localhost:27017/" + dbName, function() {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
@@ -119,14 +98,14 @@ if (process.env.NODE_ENV === "test") {
         use: () => { },
         on: () => { },
     };
-    app.use(function (req, res, next) {
+    app.use(function(req, res, next) {
         req.headers["host"] = config.host;
         next();
     });
 } else {
     // start server
-    let port = process.argv[2] || config.defaultPort;
-    io = require("socket.io").listen(server.http).listen(server.https);
+    let port = process.argv[2] || (hasHttps ? config.defaultPortSecure : config.defaultPort);
+    io = require("socket.io").listen((hasHttps ? https : http).listen(port));
     console.log("server started on port %s", port);
 }
 
@@ -152,7 +131,7 @@ function getImports() {
 
 // check for any errors in all requests
 // TODO: does this actually do anything?
-app.use(function (err, req, res, next) {
+app.use(function(err, req, res, next) {
     console.error(err.stack);
     res.status(500).send("Oops, something went wrong!");
 });
@@ -182,14 +161,14 @@ let sessionMiddleware = session({
 });
 
 // can now use session info (cookies) with socket.io requests
-io.use(function (socket, next) {
+io.use(function(socket, next) {
     sessionMiddleware(socket.request, socket.request.res, next);
 });
 // can now use session info (cookies) with regular requests
 app.use(sessionMiddleware);
 
 // load user info from session cookie into req.user object for each request
-app.use(Promise.coroutine(function* (req, res, next) {
+app.use(Promise.coroutine(function*(req, res, next) {
     if (req.session && req.session.userId) {
         try {
 
