@@ -68,12 +68,6 @@ if (hasHttps) {
         ca: fs.readFileSync(caPath),
     };
     https = https.createServer(credentials, app);
-
-    // redirect http to https
-    http.get('*', function(req, res) {
-        res.redirect('https://' + req.headers.host + req.url);
-
-    })
 }
 
 // connect to mongodb server
@@ -105,7 +99,9 @@ if (process.env.NODE_ENV === "test") {
 } else {
     // start server
     let port = process.argv[2] || (hasHttps ? config.defaultPortSecure : config.defaultPort);
-    io = require("socket.io").listen((hasHttps ? https : http).listen(port));
+    http.listen(config.defaultPort);
+    https.listen(config.defaultPortSecure);
+    io = require("socket.io").listen(hasHttps ? https : http);
     console.log("server started on port %s", port);
 }
 
@@ -147,6 +143,16 @@ app.use(compression({
         req.path.startsWith("/api") || req.path.startsWith("/js")
     ),
 }));
+
+// redirect http to https
+if (hasHttps) {
+    app.use(function(req, res, next) {
+        if (!req.secure) {
+            return res.redirect("https://" + req.headers.host + req.url);
+        }
+        next();
+    });
+}
 
 let sessionMiddleware = session({
     secret: config.sessionSecret,
