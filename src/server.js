@@ -15,6 +15,7 @@ let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to Mongo
 let vh = require("express-vhost");
 let compression = require("compression");
 let path = require("path");
+let helmet = require("helmet");
 
 
 let Promise = require("bluebird");
@@ -72,7 +73,7 @@ if (hasHttps) {
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://localhost:27017/" + dbName, function() {
+mongoose.connect("mongodb://localhost:27017/" + dbName, function () {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
@@ -89,10 +90,10 @@ let coroutine = require("./models/coroutine.js");
 let io;
 if (process.env.NODE_ENV === "test") {
     io = {
-        use: () => { },
-        on: () => { },
+        use: () => {},
+        on: () => {},
     };
-    app.use(function(req, res, next) {
+    app.use(function (req, res, next) {
         req.headers["host"] = config.host;
         next();
     });
@@ -129,11 +130,20 @@ function getImports() {
 
 // check for any errors in all requests
 // TODO: does this actually do anything?
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.status(500).send("Oops, something went wrong!");
 });
 
+app.use(helmet());
+app.use(helmet.expectCt({
+    enforce: true,
+    maxAge: 120,
+    reportUri: 'http://www.morteam.com/reportCA'
+}));
+app.use(helmet.referrerPolicy({
+    policy: 'same-origin'
+}));
 // middleware to get request body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -148,7 +158,7 @@ app.use(compression({
 
 // redirect http to https
 if (hasHttps) {
-    app.use(function(req, res, next) {
+    app.use(function (req, res, next) {
         if (!req.secure) {
             return res.redirect("https://" + req.headers.host + req.url);
         }
@@ -169,14 +179,14 @@ let sessionMiddleware = session({
 });
 
 // can now use session info (cookies) with socket.io requests
-io.use(function(socket, next) {
+io.use(function (socket, next) {
     sessionMiddleware(socket.request, socket.request.res, next);
 });
 // can now use session info (cookies) with regular requests
 app.use(sessionMiddleware);
 
 // load user info from session cookie into req.user object for each request
-app.use(Promise.coroutine(function*(req, res, next) {
+app.use(Promise.coroutine(function* (req, res, next) {
     if (req.session && req.session.userId) {
         try {
 
