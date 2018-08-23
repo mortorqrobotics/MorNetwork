@@ -6,5 +6,5 @@
     "host": "test.localhost",
     "cookieDomain": "",
     "defaultPort": 8080,
-    "defaultPortSecure": 443,
+    "defaultPortSecure": 443
 }
