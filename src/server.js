@@ -30,6 +30,7 @@ let config; // contains passwords and other sensitive info
     let configPath = getPath("../config.json");
     let defaultConfig = {
         "sessionSecret": "secret",
+        "dbHost": "localhost:27017"
         "dbName": "MorNetwork",
         "testDbName": "MorNetworkTest",
         "host": "test.localhost",
@@ -73,7 +74,7 @@ if (hasHttps) {
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://localhost:27017/" + dbName, function () {
+mongoose.connect("mongodb://" + config.dbHost + "/" + dbName, function () {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
