@@ -30,7 +30,7 @@ let config; // contains passwords and other sensitive info
     let configPath = getPath("../config.json");
     let defaultConfig = {
         "sessionSecret": "secret",
-        "dbHost": "localhost:27017"
+        "dbHost": "localhost:27017",
         "dbName": "MorNetwork",
         "testDbName": "MorNetworkTest",
         "host": "test.localhost",
