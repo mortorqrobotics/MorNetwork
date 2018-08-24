@@ -37,6 +37,10 @@ let config; // contains passwords and other sensitive info
         "cookieDomain": "",
         "defaultPort": 8080,
         "defaultPortSecure": 443,
+        "apps": {
+            "": "../morteam-server-website",
+            "scout": "../morscout-server",
+        },
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -209,18 +213,15 @@ app.use(Promise.coroutine(function* (req, res, next) {
     }
 }));
 
-
-let morteamPath = getPath("../../morteam-server-website/server/server.js");
-let morteam = require(morteamPath)(getImports());
-vh.register(config.host, morteam);
-vh.register("www." + config.host, morteam);
-
-let morscoutPath = getPath("../../morscout-server/server.js");
-if (fs.existsSync(morscoutPath)) {
-    let morscout = require(morscoutPath)(getImports());
-    vh.register("scout." + config.host, morscout);
-    vh.register("www.scout." + config.host, morscout);
+for(const app in config.apps){
+    const p = getPath(path.join('..', config.apps[app]));
+    if(fs.existsSync(p)){
+        const server = require(p)(getImports());
+        vh.register((app + config.host).replace('..', '.'), server);
+        vh.register((app + config.host).replace('..', '.'), server);
+    }
 }
+
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
 //vh.register("www.test." + config.host, testModule);
