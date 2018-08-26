@@ -217,8 +217,8 @@ for(const app in config.apps){
     const p = getPath(path.join('..', config.apps[app]));
     if(fs.existsSync(p)){
         const server = require(p)(getImports());
-        vh.register((app + config.host).replace('..', '.'), server);
-        vh.register((app + config.host).replace('..', '.'), server);
+        vh.register((app + '.' +  config.host).replace('..', '.').replace(/^(\.)/, ''), server);
+        vh.register(('www.' + app + '.' + config.host).replace('..', '.'), server);
     }
 }
 
