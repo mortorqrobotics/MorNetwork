@@ -4,6 +4,8 @@
 
 let express = require("express");
 let http = require("http");
+let net = require('net');
+let https = require('https');
 let fs = require("fs");
 let bodyParser = require("body-parser");
 let mongoose = require("mongoose"); // MongoDB ODM
@@ -12,12 +14,15 @@ let MongoStore = require("connect-mongo")(session);
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let vh = require("express-vhost");
 let compression = require("compression");
+let path = require("path");
+let helmet = require("helmet");
+
 
 let Promise = require("bluebird");
 mongoose.Promise = Promise;
 
-function getPath(path) {
-    return require("path").join(__dirname, path);
+function getPath(p) {
+    return path.join(__dirname, p);
 }
 
 let config; // contains passwords and other sensitive info
@@ -30,6 +35,7 @@ let config; // contains passwords and other sensitive info
         "host": "test.localhost",
         "cookieDomain": "",
         "defaultPort": 8080,
+        "defaultPortSecure": 443,
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -47,6 +53,23 @@ let config; // contains passwords and other sensitive info
 
 // create express application
 let app = module.exports = express();
+
+http = http.createServer(app);
+
+let keyPath = getPath("../ssl/privkey.pem");
+let certPath = getPath("../ssl/fullchain.pem");
+let caPath = getPath("../ssl/chain.pem");
+
+let hasHttps = fs.existsSync(keyPath) && fs.existsSync(certPath) && fs.existsSync(caPath);
+
+if (hasHttps) {
+    let credentials = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
+        ca: fs.readFileSync(caPath),
+    };
+    https = https.createServer(credentials, app);
+}
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
@@ -70,14 +93,18 @@ if (process.env.NODE_ENV === "test") {
         use: () => {},
         on: () => {},
     };
-    app.use(function(req, res, next) {
+    app.use(function (req, res, next) {
         req.headers["host"] = config.host;
         next();
     });
 } else {
     // start server
-    let port = process.argv[2] || config.defaultPort;
-    io = require("socket.io").listen(app.listen(port));
+    let port = process.argv[2] || (hasHttps ? config.defaultPortSecure : config.defaultPort);
+    http.listen(config.defaultPort);
+    if (hasHttps) {
+        https.listen(config.defaultPortSecure);
+    }
+    io = require("socket.io").listen(hasHttps ? https : http);
     console.log("server started on port %s", port);
 }
 
@@ -103,11 +130,20 @@ function getImports() {
 
 // check for any errors in all requests
 // TODO: does this actually do anything?
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.status(500).send("Oops, something went wrong!");
 });
 
+app.use(helmet());
+app.use(helmet.expectCt({
+    enforce: true,
+    maxAge: 120,
+    reportUri: 'http://www.morteam.com/reportCA'
+}));
+app.use(helmet.referrerPolicy({
+    policy: 'same-origin'
+}));
 // middleware to get request body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -119,6 +155,16 @@ app.use(compression({
         req.path.startsWith("/api") || req.path.startsWith("/js")
     ),
 }));
+
+// redirect http to https
+if (hasHttps) {
+    app.use(function (req, res, next) {
+        if (!req.secure) {
+            return res.redirect("https://" + req.headers.host + req.url);
+        }
+        next();
+    });
+}
 
 let sessionMiddleware = session({
     secret: config.sessionSecret,
@@ -133,14 +179,14 @@ let sessionMiddleware = session({
 });
 
 // can now use session info (cookies) with socket.io requests
-io.use(function(socket, next) {
+io.use(function (socket, next) {
     sessionMiddleware(socket.request, socket.request.res, next);
 });
 // can now use session info (cookies) with regular requests
 app.use(sessionMiddleware);
 
 // load user info from session cookie into req.user object for each request
-app.use(Promise.coroutine(function*(req, res, next) {
+app.use(Promise.coroutine(function* (req, res, next) {
     if (req.session && req.session.userId) {
         try {
 
@@ -187,6 +233,7 @@ if (fs.existsSync(morpartsPath)) {
 //vh.register("www.test." + config.host, testModule);
 
 app.use(vh.vhost(app.enabled("trust proxy")));
+
 
 // 404 handled by each application
 // TODO: still put a 404 handler here though?

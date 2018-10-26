@@ -4,19 +4,21 @@
   "description": "Main server for MorTorq web applications",
   "main": "server.js",
   "scripts": {
-    "updateall": "git pull; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git pull; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull; npm install; npm run build"
+    "updateall": "git pull; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git pull; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull; npm install; npm run build",
+    "ssl": "sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ssl/server.key -out ssl/server.crt"
   },
   "dependencies": {
-    "bcrypt": "^1.0.2",
+    "bcryptjs": "^2.4.3",
     "bluebird": "^3.5.0",
     "body-parser": "^1.17.1",
     "compression": "^1.6.2",
     "connect-mongo": "^1.3.2",
-    "express": "^4.15.2",
+    "express": "^4.16.2",
     "express-session": "^1.15.1",
     "express-vhost": "^0.2.0",
+    "helmet": "^3.13.0",
     "mongoose": "^4.8.6",
-    "socket.io": "^1.7.3"
+    "socket.io": "^2.1.1"
   },
   "repository": {
     "type": "git",
@@ -29,5 +31,8 @@
   "bugs": {
     "url": "https://github.com/mortorqrobotics/MorNetwork/issues"
   },
-  "homepage": "https://github.com/mortorqrobotics/MorNetwork"
+  "homepage": "https://github.com/mortorqrobotics/MorNetwork",
+  "devDependencies": {
+    "npm-check": "^5.5.2"
+  }
 }
