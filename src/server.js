@@ -73,7 +73,7 @@ if (hasHttps) {
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://localhost:27017/" + dbName, function () {
+mongoose.connect("mongodb://localhost:27017/" + dbName, { useMongoClient: true }, function() {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
@@ -220,6 +220,14 @@ if (fs.existsSync(morscoutPath)) {
     vh.register("scout." + config.host, morscout);
     vh.register("www.scout." + config.host, morscout);
 }
+
+let morpartsPath = getPath("../../morparts-server-website/server/server.js");
+if (fs.existsSync(morpartsPath)) {
+    let morparts = require(morpartsPath)(getImports());
+    vh.register("parts." + config.host, morparts);
+    vh.register("www.parts." + config.host, morparts);
+}
+
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
 //vh.register("www.test." + config.host, testModule);
