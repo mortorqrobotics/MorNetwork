@@ -78,7 +78,7 @@ if (hasHttps) {
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://" + config.dbHost + "/" + dbName, function () {
+mongoose.connect("mongodb://localhost:27017/" + dbName, { useMongoClient: true }, function() {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
@@ -221,7 +221,6 @@ for(const app in config.apps){
         vh.register(('www.' + app + '.' + config.host).replace('..', '.'), server);
     }
 }
-
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
 //vh.register("www.test." + config.host, testModule);
