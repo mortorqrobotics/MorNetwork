@@ -40,7 +40,7 @@ let config; // contains passwords and other sensitive info
         "apps": {
             "": "../morteam-server-website",
             "scout": "../morscout-server",
-            "parts: "../morparts-server-website",
+            "parts: "../morparts-server-website"
         },
     };
     if (fs.existsSync(configPath)) {
