@@ -31,8 +31,5 @@
   "bugs": {
     "url": "https://github.com/mortorqrobotics/MorNetwork/issues"
   },
-  "homepage": "https://github.com/mortorqrobotics/MorNetwork",
-  "devDependencies": {
-    "npm-check": "^5.5.2"
-  }
+  "homepage": "https://github.com/mortorqrobotics/MorNetwork"
 }

@@ -30,12 +30,18 @@ let config; // contains passwords and other sensitive info
     let configPath = getPath("../config.json");
     let defaultConfig = {
         "sessionSecret": "secret",
+        "dbHost": "localhost:27017",
         "dbName": "MorNetwork",
         "testDbName": "MorNetworkTest",
         "host": "test.localhost",
         "cookieDomain": "",
         "defaultPort": 8080,
         "defaultPortSecure": 443,
+        "apps": {
+            "": "../morteam-server-website",
+            "scout": "../morscout-server",
+            "parts": "../morparts-server-website",
+        },
     };
     if (fs.existsSync(configPath)) {
         config = require(configPath);
@@ -208,26 +214,14 @@ app.use(Promise.coroutine(function* (req, res, next) {
     }
 }));
 
-
-let morteamPath = getPath("../../morteam-server-website/server/server.js");
-let morteam = require(morteamPath)(getImports());
-vh.register(config.host, morteam);
-vh.register("www." + config.host, morteam);
-
-let morscoutPath = getPath("../../morscout-server/server.js");
-if (fs.existsSync(morscoutPath)) {
-    let morscout = require(morscoutPath)(getImports());
-    vh.register("scout." + config.host, morscout);
-    vh.register("www.scout." + config.host, morscout);
+for(const app in config.apps){
+    const p = getPath(path.join('..', config.apps[app]));
+    if(fs.existsSync(p)){
+        const server = require(p)(getImports());
+        vh.register((app + '.' +  config.host).replace('..', '.').replace(/^(\.)/, ''), server);
+        vh.register(('www.' + app + '.' + config.host).replace('..', '.'), server);
+    }
 }
-
-let morpartsPath = getPath("../../morparts-server-website/server/server.js");
-if (fs.existsSync(morpartsPath)) {
-    let morparts = require(morpartsPath)(getImports());
-    vh.register("parts." + config.host, morparts);
-    vh.register("www.parts." + config.host, morparts);
-}
-
 //let testModule = require("./testModule/server.js")(getImports());
 //vh.register("test." + config.host, testModule);
 //vh.register("www.test." + config.host, testModule);
