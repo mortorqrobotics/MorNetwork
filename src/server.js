@@ -73,7 +73,7 @@ if (hasHttps) {
 
 // connect to mongodb server
 let dbName = process.env.NODE_ENV === "test" ? config.testDbName : config.dbName;
-mongoose.connect("mongodb://localhost:27017/" + dbName, { useMongoClient: true }, function() {
+mongoose.connect("mongodb://localhost:27017/" + dbName, { useNewUrlParser: true }, function() {
     if (process.env.NODE_ENV === "test") {
         mongoose.connection.db.dropDatabase();
     }
