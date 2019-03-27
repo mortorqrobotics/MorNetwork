@@ -151,6 +151,7 @@ userSchema.methods.assignEmailVerif = function() {
     let user = this;
     let emailVerif = createToken(16);
     user.email_token = emailVerif;
+    return Promise.resolve(emailVerif);
 };
 
 userSchema.statics.addToTeam = Promise.coroutine(function*(userId, teamId, position, scoutCaptain) {
