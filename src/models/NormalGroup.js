@@ -29,7 +29,7 @@ normalGroupSchema.statics.createGroup = Promise.coroutine(function*(obj) {
         name: obj.name,
         team: obj.team,
     });
-    yield require("./User").update({
+    yield require("./User").updateMany({
         _id: {
             $in: obj.users,
         },
@@ -53,7 +53,7 @@ normalGroupSchema.statics.addUsers = Promise.coroutine(function*(groupId, users)
             },
         },
     });
-    yield require("./User").update({
+    yield require("./User").updateMany({
         _id: {
             $in: users,
         },
@@ -67,7 +67,7 @@ normalGroupSchema.statics.addUsers = Promise.coroutine(function*(groupId, users)
 });
 
 normalGroupSchema.statics.removeUsers = Promise.coroutine(function*(groupId, users) {
-    yield normalGroupUpdate({
+    yield normalGroupUpdateOne({
         _id: groupId,
     }, {
         $pull: {
@@ -76,7 +76,7 @@ normalGroupSchema.statics.removeUsers = Promise.coroutine(function*(groupId, use
             },
         },
     });
-    yield require("./User").update({
+    yield require("./User").updateMany({
         _id: {
             $in: users,
         },
@@ -92,8 +92,8 @@ normalGroupSchema.statics.removeUsers = Promise.coroutine(function*(groupId, use
 let NormalGroup = Group.discriminator("NormalGroup", normalGroupSchema);
 
 // should this be a thing?
-let normalGroupUpdate = NormalGroup.update.bind(NormalGroup);
-delete NormalGroup.update;
+let normalGroupUpdateOne = NormalGroup.updateOne.bind(NormalGroup);
+delete NormalGroup.updateOne;
 let normalGroupCreate = NormalGroup.create.bind(NormalGroup);
 delete NormalGroup.create;
 

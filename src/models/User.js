@@ -152,7 +152,7 @@ userSchema.statics.addToTeam = Promise.coroutine(function*(userId, teamId, posit
             position: position,
         }))._id,
     ];
-    yield User.update({
+    yield User.updateOne({
         _id: userId,
     }, {
         $set: {
@@ -167,7 +167,7 @@ userSchema.statics.addToTeam = Promise.coroutine(function*(userId, teamId, posit
 });
 
 userSchema.statics.removeFromTeam = Promise.coroutine(function*(user) {
-    yield NormalGroup.update({
+    yield NormalGroup.updateMany({
         _id: {
             $in: user.groups,
         },
