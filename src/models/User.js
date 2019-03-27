@@ -86,11 +86,10 @@ var userSchema = new Schema({
         default: [],
     },
     email_confirmed: {
-    type: Boolean,
-    default: false
+        type: Boolean,
+        default: false
     },
     email_token: String
-    
 });
 
 userSchema.pre("save", function(next) {
