@@ -84,7 +84,13 @@ var userSchema = new Schema({
             required: true,
         }],
         default: [],
-    }
+    },
+    email_confirmed: {
+    type: Boolean,
+    default: false
+    },
+    email_token: String
+    
 });
 
 userSchema.pre("save", function(next) {
@@ -140,6 +146,12 @@ userSchema.methods.assignNewPassword = function() {
     let newPassword = createToken(8);
     user.password = newPassword;
     return Promise.resolve(newPassword);
+};
+
+userSchema.methods.assignEmailVerif = function() {
+    let user = this;
+    let emailVerif = createToken(16);
+    user.email_token = emailVerif;
 };
 
 userSchema.statics.addToTeam = Promise.coroutine(function*(userId, teamId, position, scoutCaptain) {
