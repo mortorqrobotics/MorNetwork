@@ -4,7 +4,7 @@
   "description": "Main server for MorTorq web applications",
   "main": "server.js",
   "scripts": {
-    "updateall": "git pull; npm install; cd ..; if [ ! -d 'morteam-server-website' ]; then git clone https://github.com/mortorqrobotics/morteam-server-website; fi; cd morteam-server-website; git pull; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull; npm install; npm run build",
+    "updateall": "git pull; npm install; cd ..; if [ ! -d 'morteam-server' ]; then git clone https://github.com/mortorqrobotics/morteam-server; fi; cd morteam-server; git pull; npm install; cd ..; if [ ! -d 'morteam-web' ]; then git clone https://github.com/mortorqrobotics/morteam-web; fi; cd morteam-web; git pull; npm install; npm run build",
     "ssl": "sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ssl/server.key -out ssl/server.crt"
   },
   "dependencies": {

@@ -209,7 +209,7 @@ app.use(Promise.coroutine(function* (req, res, next) {
 }));
 
 
-let morteamPath = getPath("../../morteam-server-website/server/server.js");
+let morteamPath = getPath("../../morteam-server/src/server.js");
 let morteam = require(morteamPath)(getImports());
 vh.register(config.host, morteam);
 vh.register("www." + config.host, morteam);
