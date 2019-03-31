@@ -44,7 +44,7 @@ normalGroupSchema.statics.createGroup = Promise.coroutine(function*(obj) {
 });
 
 normalGroupSchema.statics.addUsers = Promise.coroutine(function*(groupId, users) {
-    yield normalGroupUpdate({
+    yield normalGroupUpdateOne({
         _id: groupId,
     }, {
         $addToSet: {
